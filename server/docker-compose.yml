@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  housekeeping-api:
+    build: .
+    container_name: housekeeping-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount local directory to persist SQLite database outside container
+      - .:/app
+    restart: always

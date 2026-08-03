@@ -24,7 +24,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="last_done_label">Last Done: %s ✏️</string>
-    <string name="due_by_label">Due By: %s ✏️</string>
+    <string name="due_by_label">Due By: %s</string>
     <string name="never">Never</string>
     <string name="not_set">Not set</string>
 </resources>

@@ -2,6 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/select_household"
+        android:title="Switch Household"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/household_info"
+        android:title="Household Info"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/add_custom_task"
         android:title="@string/add_custom_task"
         app:showAsAction="never" />

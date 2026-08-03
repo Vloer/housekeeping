@@ -43,3 +43,13 @@ cmake/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Python
+*.pyc
+**/__pycache__/
+
+# Scripts
+deploy.sh
+
+# Docs
+server/README.md

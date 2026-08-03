@@ -25,7 +25,6 @@ public class ActiveTaskAdapter extends RecyclerView.Adapter<ActiveTaskAdapter.Vi
     public interface OnTaskActionListener {
         void onTaskDone(ActiveTask task);
         void onEditLastDoneDate(ActiveTask task);
-        void onEditDueDate(ActiveTask task);
         void onEditTask(ActiveTask task);
     }
 
@@ -106,12 +105,6 @@ public class ActiveTaskAdapter extends RecyclerView.Adapter<ActiveTaskAdapter.Vi
         holder.textLastDone.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onEditLastDoneDate(task);
-            }
-        });
-
-        holder.textDueBy.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onEditDueDate(task);
             }
         });
     }

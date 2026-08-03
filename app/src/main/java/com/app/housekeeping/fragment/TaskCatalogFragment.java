@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.app.housekeeping.R;
 import com.app.housekeeping.adapter.TaskCatalogAdapter;
 import com.app.housekeeping.database.TaskRepository;
+import com.app.housekeeping.household.HouseholdManager;
 import com.app.housekeeping.model.CatalogTask;
 import com.app.housekeeping.model.Frequency;
 
@@ -56,9 +57,27 @@ public class TaskCatalogFragment extends Fragment implements TaskCatalogAdapter.
     }
     
     public void refreshTasks() {
-        if (repository != null && adapter != null) {
-            List<CatalogTask> tasks = repository.getAllCatalogTasks();
-            adapter.updateTasks(tasks);
+        if (repository != null && adapter != null && isAdded()) {
+            HouseholdManager hm = HouseholdManager.getInstance(requireContext());
+            if (hm.hasHousehold()) {
+                repository.getCatalogTasksNetwork(hm.getHouseholdId(), new TaskRepository.RepositoryCallback<List<CatalogTask>>() {
+                    @Override
+                    public void onSuccess(List<CatalogTask> tasks) {
+                        if (!isAdded()) return;
+                        adapter.updateTasks(tasks);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        if (!isAdded()) return;
+                        List<CatalogTask> tasks = repository.getAllCatalogTasks();
+                        adapter.updateTasks(tasks);
+                    }
+                });
+            } else {
+                List<CatalogTask> tasks = repository.getAllCatalogTasks();
+                adapter.updateTasks(tasks);
+            }
         }
     }
 
@@ -82,11 +101,10 @@ public class TaskCatalogFragment extends Fragment implements TaskCatalogAdapter.
                 .setSingleChoiceItems(labels, checkedItem, (dialog, which) -> selectedIndex[0] = which)
                 .setPositiveButton("Activate", (dialog, which) -> {
                     Frequency selectedFreq = frequencies[selectedIndex[0]];
-                    repository.activateTask(task.getId(), selectedFreq.days);
-                    refreshTasks();
+                    HouseholdManager hm = HouseholdManager.getInstance(requireContext());
+                    repository.activateTaskNetwork(hm.getHouseholdId(), task.getId(), selectedFreq.days, result -> refreshTasks());
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> {
-                    // Revert the switch since user cancelled
                     refreshTasks();
                 })
                 .setOnCancelListener(dialog -> refreshTasks())
@@ -99,11 +117,10 @@ public class TaskCatalogFragment extends Fragment implements TaskCatalogAdapter.
                 .setTitle("Deactivate Task")
                 .setMessage("Are you sure you want to deactivate " + task.getName() + "?")
                 .setPositiveButton("Deactivate", (dialog, which) -> {
-                    repository.deactivateTask(task.getId());
-                    refreshTasks();
+                    HouseholdManager hm = HouseholdManager.getInstance(requireContext());
+                    repository.deactivateTaskNetwork(hm.getHouseholdId(), task.getId(), result -> refreshTasks());
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> {
-                    // Revert the switch
                     refreshTasks();
                 })
                 .setOnCancelListener(dialog -> refreshTasks())
@@ -140,8 +157,8 @@ public class TaskCatalogFragment extends Fragment implements TaskCatalogAdapter.
                         int pos = spinnerFrequency.getSelectedItemPosition();
                         Frequency selectedFreq = frequencies[pos];
                         if (repository != null) {
-                            repository.updateTask(task.getId(), updatedName, selectedFreq.days);
-                            refreshTasks();
+                            HouseholdManager hm = HouseholdManager.getInstance(requireContext());
+                            repository.updateTaskNetwork(hm.getHouseholdId(), task.getId(), updatedName, selectedFreq.days, result -> refreshTasks());
                         }
                     }
                 })

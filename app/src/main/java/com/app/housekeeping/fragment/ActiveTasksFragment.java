@@ -16,9 +16,11 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.app.housekeeping.MainActivity;
 import com.app.housekeeping.R;
 import com.app.housekeeping.adapter.ActiveTaskAdapter;
 import com.app.housekeeping.database.TaskRepository;
+import com.app.housekeeping.household.HouseholdManager;
 import com.app.housekeeping.model.ActiveTask;
 import com.app.housekeeping.model.Frequency;
 
@@ -63,26 +65,58 @@ public class ActiveTasksFragment extends Fragment implements ActiveTaskAdapter.O
         refreshTasks();
     }
     
-    private void refreshTasks() {
-        if (repository != null && adapter != null) {
-            List<ActiveTask> tasks = repository.getActiveTasks();
-            adapter.updateTasks(tasks);
-            
-            if (tasks.isEmpty()) {
-                recyclerView.setVisibility(View.GONE);
-                emptyState.setVisibility(View.VISIBLE);
+    public void refreshTasks() {
+        if (repository != null && adapter != null && isAdded()) {
+            HouseholdManager hm = HouseholdManager.getInstance(requireContext());
+            if (hm.hasHousehold()) {
+                repository.getActiveTasksNetwork(hm.getHouseholdId(), new TaskRepository.RepositoryCallback<List<ActiveTask>>() {
+                    @Override
+                    public void onSuccess(List<ActiveTask> tasks) {
+                        if (!isAdded()) return;
+                        adapter.updateTasks(tasks);
+                        updateTabCount(tasks.size());
+                        if (tasks.isEmpty()) {
+                            recyclerView.setVisibility(View.GONE);
+                            emptyState.setVisibility(View.VISIBLE);
+                        } else {
+                            recyclerView.setVisibility(View.VISIBLE);
+                            emptyState.setVisibility(View.GONE);
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        if (!isAdded()) return;
+                        List<ActiveTask> tasks = repository.getActiveTasks();
+                        adapter.updateTasks(tasks);
+                        updateTabCount(tasks.size());
+                    }
+                });
             } else {
-                recyclerView.setVisibility(View.VISIBLE);
-                emptyState.setVisibility(View.GONE);
+                List<ActiveTask> tasks = repository.getActiveTasks();
+                adapter.updateTasks(tasks);
+                updateTabCount(tasks.size());
+                if (tasks.isEmpty()) {
+                    recyclerView.setVisibility(View.GONE);
+                    emptyState.setVisibility(View.VISIBLE);
+                } else {
+                    recyclerView.setVisibility(View.VISIBLE);
+                    emptyState.setVisibility(View.GONE);
+                }
             }
+        }
+    }
+
+    private void updateTabCount(int count) {
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).updateToDoTabCount(count);
         }
     }
 
     @Override
     public void onTaskDone(ActiveTask task) {
         if (repository != null) {
-            repository.markDone(task.getId());
-            refreshTasks();
+            repository.markDoneNetwork(task.getId(), result -> refreshTasks());
         }
     }
 
@@ -103,8 +137,7 @@ public class ActiveTasksFragment extends Fragment implements ActiveTaskAdapter.O
                     selected.set(year, month, dayOfMonth);
                     String newDateStr = dateFormat.format(selected.getTime());
                     if (repository != null) {
-                        repository.updateLastDoneDate(task.getId(), newDateStr);
-                        refreshTasks();
+                        repository.updateLastDoneDateNetwork(task.getId(), newDateStr, result -> refreshTasks());
                     }
                 },
                 cal.get(Calendar.YEAR),
@@ -115,34 +148,6 @@ public class ActiveTasksFragment extends Fragment implements ActiveTaskAdapter.O
         dialog.show();
     }
 
-    @Override
-    public void onEditDueDate(ActiveTask task) {
-        Calendar cal = Calendar.getInstance();
-        if (task.getDueDate() != null && !task.getDueDate().isEmpty()) {
-            try {
-                Date date = dateFormat.parse(task.getDueDate());
-                if (date != null) cal.setTime(date);
-            } catch (Exception ignored) {}
-        }
-
-        DatePickerDialog dialog = new DatePickerDialog(
-                requireContext(),
-                (view, year, month, dayOfMonth) -> {
-                    Calendar selected = Calendar.getInstance();
-                    selected.set(year, month, dayOfMonth);
-                    String newDueDateStr = dateFormat.format(selected.getTime());
-                    if (repository != null) {
-                        repository.updateDueDate(task.getId(), newDueDateStr, task.getFrequencyDays());
-                        refreshTasks();
-                    }
-                },
-                cal.get(Calendar.YEAR),
-                cal.get(Calendar.MONTH),
-                cal.get(Calendar.DAY_OF_MONTH)
-        );
-        dialog.setTitle("Edit Due Date");
-        dialog.show();
-    }
 
     @Override
     public void onEditTask(ActiveTask task) {
@@ -173,8 +178,8 @@ public class ActiveTasksFragment extends Fragment implements ActiveTaskAdapter.O
                         int pos = spinnerFrequency.getSelectedItemPosition();
                         Frequency selectedFreq = frequencies[pos];
                         if (repository != null) {
-                            repository.updateTask(task.getCatalogTaskId(), updatedName, selectedFreq.days);
-                            refreshTasks();
+                            HouseholdManager hm = HouseholdManager.getInstance(requireContext());
+                            repository.updateTaskNetwork(hm.getHouseholdId(), task.getCatalogTaskId(), updatedName, selectedFreq.days, result -> refreshTasks());
                         }
                     }
                 })

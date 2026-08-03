@@ -8,6 +8,10 @@ import android.text.TextUtils;
 
 import com.app.housekeeping.model.ActiveTask;
 import com.app.housekeeping.model.CatalogTask;
+import com.app.housekeeping.network.ApiClient;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -17,6 +21,12 @@ import java.util.List;
 import java.util.Locale;
 
 public class TaskRepository {
+
+    @FunctionalInterface
+    public interface RepositoryCallback<T> {
+        void onSuccess(T result);
+        default void onError(String error) {}
+    }
 
     private static TaskRepository instance;
     private final DatabaseHelper dbHelper;
@@ -32,6 +42,292 @@ public class TaskRepository {
         }
         return instance;
     }
+
+    // --- Network API Methods ---
+
+    public void getCatalogTasksNetwork(int householdId, RepositoryCallback<List<CatalogTask>> callback) {
+        ApiClient.getArray("/households/" + householdId + "/catalog", new ApiClient.ApiCallback<JSONArray>() {
+            @Override
+            public void onSuccess(JSONArray result) {
+                List<CatalogTask> tasks = new ArrayList<>();
+                try {
+                    for (int i = 0; i < result.length(); i++) {
+                        JSONObject obj = result.getJSONObject(i);
+                        CatalogTask task = new CatalogTask();
+                        task.setId(obj.getInt("id"));
+                        task.setName(obj.getString("name"));
+                        task.setCustom(obj.getBoolean("is_custom"));
+                        task.setDefaultFrequencyDays(obj.getInt("default_frequency_days"));
+                        task.setActive(obj.getBoolean("is_active"));
+                        task.setFrequencyDays(obj.getInt("frequency_days"));
+                        tasks.add(task);
+                    }
+                    callback.onSuccess(tasks);
+                } catch (Exception e) {
+                    callback.onError("Parsing error: " + e.getMessage());
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                // Fallback to local
+                callback.onSuccess(getAllCatalogTasks());
+            }
+        });
+    }
+
+    public void getActiveTasksNetwork(int householdId, RepositoryCallback<List<ActiveTask>> callback) {
+        ApiClient.getArray("/households/" + householdId + "/active", new ApiClient.ApiCallback<JSONArray>() {
+            @Override
+            public void onSuccess(JSONArray result) {
+                List<ActiveTask> tasks = new ArrayList<>();
+                try {
+                    for (int i = 0; i < result.length(); i++) {
+                        JSONObject obj = result.getJSONObject(i);
+                        ActiveTask task = new ActiveTask();
+                        task.setId(obj.getInt("id"));
+                        task.setCatalogTaskId(obj.getInt("catalog_task_id"));
+                        task.setTaskName(obj.getString("task_name"));
+                        task.setFrequencyDays(obj.getInt("frequency_days"));
+                        if (!obj.isNull("last_done_date")) {
+                            task.setLastDoneDate(obj.getString("last_done_date"));
+                        }
+                        if (!obj.isNull("due_date")) {
+                            task.setDueDate(obj.getString("due_date"));
+                        }
+                        task.setDaysOverdue(obj.getInt("days_overdue"));
+                        tasks.add(task);
+                    }
+                    callback.onSuccess(tasks);
+                } catch (Exception e) {
+                    callback.onError("Parsing error: " + e.getMessage());
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                // Fallback to local
+                callback.onSuccess(getActiveTasks());
+            }
+        });
+    }
+
+    public void getAllActiveTasksUnsortedNetwork(int householdId, RepositoryCallback<List<ActiveTask>> callback) {
+        ApiClient.getArray("/households/" + householdId + "/active/all", new ApiClient.ApiCallback<JSONArray>() {
+            @Override
+            public void onSuccess(JSONArray result) {
+                List<ActiveTask> tasks = new ArrayList<>();
+                try {
+                    for (int i = 0; i < result.length(); i++) {
+                        JSONObject obj = result.getJSONObject(i);
+                        ActiveTask task = new ActiveTask();
+                        task.setId(obj.getInt("id"));
+                        task.setCatalogTaskId(obj.getInt("catalog_task_id"));
+                        task.setTaskName(obj.getString("task_name"));
+                        task.setFrequencyDays(obj.getInt("frequency_days"));
+                        if (!obj.isNull("last_done_date")) {
+                            task.setLastDoneDate(obj.getString("last_done_date"));
+                        }
+                        if (!obj.isNull("due_date")) {
+                            task.setDueDate(obj.getString("due_date"));
+                        }
+                        task.setDaysOverdue(obj.getInt("days_overdue"));
+                        tasks.add(task);
+                    }
+                    callback.onSuccess(tasks);
+                } catch (Exception e) {
+                    callback.onError("Parsing error: " + e.getMessage());
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                callback.onSuccess(getAllActiveTasksUnsorted());
+            }
+        });
+    }
+
+    public void activateTaskNetwork(int householdId, int catalogTaskId, int frequencyDays, RepositoryCallback<Void> callback) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put("catalog_task_id", catalogTaskId);
+            body.put("frequency_days", frequencyDays);
+            ApiClient.post("/households/" + householdId + "/activate", body, new ApiClient.ApiCallback<JSONObject>() {
+                @Override
+                public void onSuccess(JSONObject result) {
+                    // Sync local SQLite
+                    activateTask(catalogTaskId, frequencyDays);
+                    callback.onSuccess(null);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    activateTask(catalogTaskId, frequencyDays);
+                    callback.onSuccess(null);
+                }
+            });
+        } catch (Exception e) {
+            activateTask(catalogTaskId, frequencyDays);
+            callback.onSuccess(null);
+        }
+    }
+
+    public void deactivateTaskNetwork(int householdId, int catalogTaskId, RepositoryCallback<Void> callback) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put("catalog_task_id", catalogTaskId);
+            ApiClient.post("/households/" + householdId + "/deactivate", body, new ApiClient.ApiCallback<JSONObject>() {
+                @Override
+                public void onSuccess(JSONObject result) {
+                    deactivateTask(catalogTaskId);
+                    callback.onSuccess(null);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    deactivateTask(catalogTaskId);
+                    callback.onSuccess(null);
+                }
+            });
+        } catch (Exception e) {
+            deactivateTask(catalogTaskId);
+            callback.onSuccess(null);
+        }
+    }
+
+    public void markDoneNetwork(int activeTaskId, RepositoryCallback<Void> callback) {
+        ApiClient.post("/active-tasks/" + activeTaskId + "/mark-done", null, new ApiClient.ApiCallback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject result) {
+                markDone(activeTaskId);
+                callback.onSuccess(null);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                markDone(activeTaskId);
+                callback.onSuccess(null);
+            }
+        });
+    }
+
+    public void updateLastDoneDateNetwork(int activeTaskId, String lastDoneDate, RepositoryCallback<Void> callback) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put("last_done_date", lastDoneDate);
+            ApiClient.post("/active-tasks/" + activeTaskId + "/update-last-done", body, new ApiClient.ApiCallback<JSONObject>() {
+                @Override
+                public void onSuccess(JSONObject result) {
+                    updateLastDoneDate(activeTaskId, lastDoneDate);
+                    callback.onSuccess(null);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    updateLastDoneDate(activeTaskId, lastDoneDate);
+                    callback.onSuccess(null);
+                }
+            });
+        } catch (Exception e) {
+            updateLastDoneDate(activeTaskId, lastDoneDate);
+            callback.onSuccess(null);
+        }
+    }
+
+    public void updateDueDateNetwork(int activeTaskId, String dueDateStr, int frequencyDays, RepositoryCallback<Void> callback) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put("due_date", dueDateStr);
+            body.put("frequency_days", frequencyDays);
+            ApiClient.post("/active-tasks/" + activeTaskId + "/update-due-date", body, new ApiClient.ApiCallback<JSONObject>() {
+                @Override
+                public void onSuccess(JSONObject result) {
+                    updateDueDate(activeTaskId, dueDateStr, frequencyDays);
+                    callback.onSuccess(null);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    updateDueDate(activeTaskId, dueDateStr, frequencyDays);
+                    callback.onSuccess(null);
+                }
+            });
+        } catch (Exception e) {
+            updateDueDate(activeTaskId, dueDateStr, frequencyDays);
+            callback.onSuccess(null);
+        }
+    }
+
+    public void addCustomTaskNetwork(int householdId, String name, int defaultFrequencyDays, RepositoryCallback<Void> callback) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put("name", name);
+            body.put("default_frequency_days", defaultFrequencyDays);
+            ApiClient.post("/households/" + householdId + "/custom-task", body, new ApiClient.ApiCallback<JSONObject>() {
+                @Override
+                public void onSuccess(JSONObject result) {
+                    addCustomTask(name, defaultFrequencyDays);
+                    callback.onSuccess(null);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    addCustomTask(name, defaultFrequencyDays);
+                    callback.onSuccess(null);
+                }
+            });
+        } catch (Exception e) {
+            addCustomTask(name, defaultFrequencyDays);
+            callback.onSuccess(null);
+        }
+    }
+
+    public void updateTaskNetwork(int householdId, int catalogTaskId, String newName, int newFrequencyDays, RepositoryCallback<Void> callback) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put("catalog_task_id", catalogTaskId);
+            body.put("name", newName);
+            body.put("frequency_days", newFrequencyDays);
+            ApiClient.post("/households/" + householdId + "/update-task", body, new ApiClient.ApiCallback<JSONObject>() {
+                @Override
+                public void onSuccess(JSONObject result) {
+                    updateTask(catalogTaskId, newName, newFrequencyDays);
+                    callback.onSuccess(null);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    updateTask(catalogTaskId, newName, newFrequencyDays);
+                    callback.onSuccess(null);
+                }
+            });
+        } catch (Exception e) {
+            updateTask(catalogTaskId, newName, newFrequencyDays);
+            callback.onSuccess(null);
+        }
+    }
+
+    public void importCsvNetwork(int householdId, String csvContent, RepositoryCallback<Void> callback) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put("csv_content", csvContent);
+            ApiClient.post("/households/" + householdId + "/import-csv", body, new ApiClient.ApiCallback<JSONObject>() {
+                @Override
+                public void onSuccess(JSONObject result) {
+                    callback.onSuccess(null);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    callback.onError(errorMessage);
+                }
+            });
+        } catch (Exception e) {
+            callback.onError(e.getMessage());
+        }
+    }
+
+    // --- Local SQLite Synchronous Fallbacks ---
 
     public List<CatalogTask> getAllCatalogTasks() {
         List<CatalogTask> tasks = new ArrayList<>();
@@ -79,7 +375,7 @@ public class TaskRepository {
                 "JOIN task_catalog c ON a.catalog_task_id = c.id " +
                 "WHERE a.last_done_date IS NULL " +
                 "   OR julianday('now', 'localtime') - julianday(date(a.last_done_date, '+' || a.frequency_days || ' days')) >= -2 " +
-                "ORDER BY days_overdue DESC";
+                "ORDER BY a.frequency_days ASC, days_overdue DESC";
                 
         try (Cursor cursor = db.rawQuery(query, null)) {
             if (cursor.moveToFirst()) {
@@ -296,7 +592,6 @@ public class TaskRepository {
         if (!cursor.isNull(overdueIdx)) {
             task.setDaysOverdue(cursor.getInt(overdueIdx));
         } else {
-            // For NULL last_done_date, set daysOverdue = frequencyDays (treat as very overdue)
             task.setDaysOverdue(task.getFrequencyDays());
         }
         
