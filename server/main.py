@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from database import init_db
-from routers import households, tasks, active_tasks
+from routers import households, tasks, active_tasks, highscores
+from auth import verify_token
 
 app = FastAPI(
     title="Housekeeping Shared Backend API",
@@ -11,10 +12,11 @@ app = FastAPI(
 # Initialize Database tables
 init_db()
 
-# Include Routers
-app.include_router(households.router)
-app.include_router(tasks.router)
-app.include_router(active_tasks.router)
+# Include Routers with enforced authentication
+app.include_router(households.router, dependencies=[Depends(verify_token)])
+app.include_router(tasks.router, dependencies=[Depends(verify_token)])
+app.include_router(active_tasks.router, dependencies=[Depends(verify_token)])
+app.include_router(highscores.router, dependencies=[Depends(verify_token)])
 
 @app.get("/")
 def root():

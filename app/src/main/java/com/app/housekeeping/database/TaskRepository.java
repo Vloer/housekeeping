@@ -8,15 +8,16 @@ import android.text.TextUtils;
 
 import com.app.housekeeping.model.ActiveTask;
 import com.app.housekeeping.model.CatalogTask;
+import com.app.housekeeping.model.HighscoreEntry;
+import com.app.housekeeping.household.HouseholdManager;
 import com.app.housekeeping.network.ApiClient;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -30,7 +31,7 @@ public class TaskRepository {
 
     private static TaskRepository instance;
     private final DatabaseHelper dbHelper;
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.US);
 
     private TaskRepository(Context context) {
         dbHelper = new DatabaseHelper(context.getApplicationContext());
@@ -195,18 +196,85 @@ public class TaskRepository {
         }
     }
 
+    public void markDoneNetwork(int activeTaskId, String userUuid, RepositoryCallback<Void> callback) {
+        try {
+            JSONObject body = new JSONObject();
+            if (userUuid != null && !userUuid.isEmpty()) {
+                body.put("user_uuid", userUuid);
+            }
+            ApiClient.post("/active-tasks/" + activeTaskId + "/mark-done", body, new ApiClient.ApiCallback<JSONObject>() {
+                @Override
+                public void onSuccess(JSONObject result) {
+                    markDone(activeTaskId);
+                    callback.onSuccess(null);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    markDone(activeTaskId);
+                    callback.onSuccess(null);
+                }
+            });
+        } catch (Exception e) {
+            markDone(activeTaskId);
+            callback.onSuccess(null);
+        }
+    }
+
     public void markDoneNetwork(int activeTaskId, RepositoryCallback<Void> callback) {
-        ApiClient.post("/active-tasks/" + activeTaskId + "/mark-done", null, new ApiClient.ApiCallback<JSONObject>() {
+        markDoneNetwork(activeTaskId, "", callback);
+    }
+
+    public void getHouseholdHighscoresNetwork(int householdId, RepositoryCallback<List<HighscoreEntry>> callback) {
+        ApiClient.getArray("/highscores/household/" + householdId, new ApiClient.ApiCallback<JSONArray>() {
             @Override
-            public void onSuccess(JSONObject result) {
-                markDone(activeTaskId);
-                callback.onSuccess(null);
+            public void onSuccess(JSONArray result) {
+                List<HighscoreEntry> list = new ArrayList<>();
+                try {
+                    for (int i = 0; i < result.length(); i++) {
+                        JSONObject obj = result.getJSONObject(i);
+                        int rank = obj.getInt("rank");
+                        String uuid = obj.getString("user_uuid");
+                        String name = obj.getString("username");
+                        int pts = obj.getInt("points");
+                        list.add(new HighscoreEntry(rank, uuid, name, pts));
+                    }
+                    callback.onSuccess(list);
+                } catch (Exception e) {
+                    callback.onError("Parsing error: " + e.getMessage());
+                }
             }
 
             @Override
             public void onError(String errorMessage) {
-                markDone(activeTaskId);
-                callback.onSuccess(null);
+                callback.onError(errorMessage);
+            }
+        });
+    }
+
+    public void getGlobalHighscoresNetwork(RepositoryCallback<List<HighscoreEntry>> callback) {
+        ApiClient.getArray("/highscores/global", new ApiClient.ApiCallback<JSONArray>() {
+            @Override
+            public void onSuccess(JSONArray result) {
+                List<HighscoreEntry> list = new ArrayList<>();
+                try {
+                    for (int i = 0; i < result.length(); i++) {
+                        JSONObject obj = result.getJSONObject(i);
+                        int rank = obj.getInt("rank");
+                        String uuid = obj.getString("user_uuid");
+                        String name = obj.getString("username");
+                        int pts = obj.getInt("points");
+                        list.add(new HighscoreEntry(rank, uuid, name, pts));
+                    }
+                    callback.onSuccess(list);
+                } catch (Exception e) {
+                    callback.onError("Parsing error: " + e.getMessage());
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                callback.onError(errorMessage);
             }
         });
     }
@@ -426,7 +494,7 @@ public class TaskRepository {
     public void markDone(int activeTaskId) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
-        cv.put("last_done_date", dateFormat.format(new Date()));
+        cv.put("last_done_date", LocalDate.now().format(DATE_FORMATTER));
         cv.put("notified_this_cycle", 0);
         db.update("active_tasks", cv, "id = ?", new String[]{String.valueOf(activeTaskId)});
     }
@@ -441,14 +509,9 @@ public class TaskRepository {
 
     public void updateDueDate(int activeTaskId, String dueDateStr, int frequencyDays) {
         try {
-            Date dueDate = dateFormat.parse(dueDateStr);
-            if (dueDate != null) {
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(dueDate);
-                cal.add(Calendar.DAY_OF_MONTH, -frequencyDays);
-                String lastDoneDate = dateFormat.format(cal.getTime());
-                updateLastDoneDate(activeTaskId, lastDoneDate);
-            }
+            LocalDate dueDate = LocalDate.parse(dueDateStr, DATE_FORMATTER);
+            LocalDate lastDoneDate = dueDate.minusDays(frequencyDays);
+            updateLastDoneDate(activeTaskId, lastDoneDate.format(DATE_FORMATTER));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -512,13 +575,18 @@ public class TaskRepository {
         ContentValues cv = new ContentValues();
         cv.put("notified_this_cycle", 1);
         
-        List<String> idStrings = new ArrayList<>();
-        for (Integer id : taskIds) {
-            idStrings.add(String.valueOf(id));
+        StringBuilder whereClause = new StringBuilder("id IN (");
+        String[] whereArgs = new String[taskIds.size()];
+        for (int i = 0; i < taskIds.size(); i++) {
+            if (i > 0) {
+                whereClause.append(",");
+            }
+            whereClause.append("?");
+            whereArgs[i] = String.valueOf(taskIds.get(i));
         }
+        whereClause.append(")");
         
-        String inClause = TextUtils.join(",", idStrings);
-        db.update("active_tasks", cv, "id IN (" + inClause + ")", null);
+        db.update("active_tasks", cv, whereClause.toString(), whereArgs);
     }
 
     public void importTask(String name, int frequencyDays, String lastDoneDate) {

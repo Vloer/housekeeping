@@ -52,9 +52,11 @@ public class MainActivity extends AppCompatActivity {
 
     private ViewPager2 viewPager;
     private ViewPagerAdapter adapter;
+    private TabLayoutMediator tabLayoutMediator;
     private ActivityResultLauncher<String> requestPermissionLauncher;
     private ActivityResultLauncher<String[]> openDocumentLauncher;
     private TaskRepository repository;
+    private boolean isOnboardingDialogShowing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,15 +73,7 @@ public class MainActivity extends AppCompatActivity {
         viewPager.setAdapter(adapter);
 
         TabLayout tabLayout = findViewById(R.id.tab_layout);
-        new TabLayoutMediator(tabLayout, viewPager,
-                (tab, position) -> {
-                    if (position == 0) {
-                        tab.setText(R.string.tab_todo);
-                    } else {
-                        tab.setText(R.string.tab_tasks);
-                    }
-                }
-        ).attach();
+        setupTabs(tabLayout);
 
         requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
             // Permission request result handling
@@ -98,10 +92,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         DailyAlarmReceiver.scheduleDailyAlarm(this);
-
-        if (!HouseholdManager.getInstance(this).hasHousehold()) {
-            checkHouseholdOnboarding();
-        }
     }
 
     public void updateToDoTabCount(int count) {
@@ -128,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
         if (hm.hasHousehold()) {
             String name = hm.getHouseholdName();
             if (getSupportActionBar() != null) {
-                getSupportActionBar().setTitle(name + " housekeeping");
+                getSupportActionBar().setTitle(getString(R.string.title_household_housekeeping, name));
             }
         } else {
             if (getSupportActionBar() != null) {
@@ -139,10 +129,20 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkHouseholdOnboarding() {
         HouseholdManager hm = HouseholdManager.getInstance(this);
-        if (!hm.hasHousehold()) {
-            HouseholdOnboardingDialog.show(this, () -> {
-                updateAppTitle();
-                refreshFragments();
+        if (!hm.hasHousehold() && !isOnboardingDialogShowing) {
+            isOnboardingDialogShowing = true;
+            HouseholdOnboardingDialog.show(this, new HouseholdOnboardingDialog.OnHouseholdSetupListener() {
+                @Override
+                public void onHouseholdSetupSuccess() {
+                    isOnboardingDialogShowing = false;
+                    updateAppTitle();
+                    refreshFragments();
+                }
+
+                @Override
+                public void onHouseholdSetupDismissed() {
+                    isOnboardingDialogShowing = false;
+                }
             });
         }
     }
@@ -182,10 +182,7 @@ public class MainActivity extends AppCompatActivity {
         List<com.app.housekeeping.model.Household> households = hm.getJoinedHouseholds();
         
         if (households.isEmpty()) {
-            HouseholdOnboardingDialog.show(this, () -> {
-                updateAppTitle();
-                refreshFragments();
-            });
+            checkHouseholdOnboarding();
             return;
         }
 
@@ -200,17 +197,14 @@ public class MainActivity extends AppCompatActivity {
                 selectedIdx = i;
             }
         }
-        items[households.size()] = "+ Create or Join Household";
+        items[households.size()] = getString(R.string.create_or_join_household);
 
         new AlertDialog.Builder(this)
-                .setTitle("Select Household")
+                .setTitle(R.string.select_household)
                 .setSingleChoiceItems(items, selectedIdx, (dialog, which) -> {
                     if (which == households.size()) {
                         dialog.dismiss();
-                        HouseholdOnboardingDialog.show(this, () -> {
-                            updateAppTitle();
-                            refreshFragments();
-                        });
+                        checkHouseholdOnboarding();
                     } else {
                         com.app.housekeeping.model.Household selected = households.get(which);
                         hm.setCurrentHousehold(selected.getId());
@@ -219,29 +213,29 @@ public class MainActivity extends AppCompatActivity {
                         dialog.dismiss();
                     }
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
     private void showHouseholdInfoDialog() {
         HouseholdManager hm = HouseholdManager.getInstance(this);
-        String message = "Household Name: " + hm.getHouseholdName() + "\n\nJoin Code: " + hm.getJoinCode();
+        String message = getString(R.string.household_info_message, hm.getHouseholdName(), hm.getJoinCode());
 
         new AlertDialog.Builder(this)
-                .setTitle("Household Info")
+                .setTitle(R.string.household_info)
                 .setMessage(message)
-                .setPositiveButton("Copy Code", (dialog, which) -> {
+                .setPositiveButton(R.string.copy_code, (dialog, which) -> {
                     ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                    ClipData clip = ClipData.newPlainText("Join Code", hm.getJoinCode());
+                    ClipData clip = ClipData.newPlainText(getString(R.string.join_code_label), hm.getJoinCode());
                     if (clipboard != null) {
                         clipboard.setPrimaryClip(clip);
-                        Toast.makeText(this, "Join Code copied to clipboard", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, R.string.code_copied_toast, Toast.LENGTH_SHORT).show();
                     }
                 })
-                .setNeutralButton("Switch Household", (dialog, which) -> {
+                .setNeutralButton(R.string.switch_household, (dialog, which) -> {
                     showSwitchHouseholdDialog();
                 })
-                .setNegativeButton("Close", null)
+                .setNegativeButton(R.string.close, null)
                 .show();
     }
 
@@ -255,9 +249,9 @@ public class MainActivity extends AppCompatActivity {
         spinnerFrequency.setAdapter(spinnerAdapter);
 
         new AlertDialog.Builder(this)
-                .setTitle("Add Custom Task")
+                .setTitle(R.string.add_custom_task)
                 .setView(dialogView)
-                .setPositiveButton("Add", (dialog, which) -> {
+                .setPositiveButton(R.string.add, (dialog, which) -> {
                     String taskName = editTaskName.getText().toString().trim();
                     if (!taskName.isEmpty()) {
                         int position = spinnerFrequency.getSelectedItemPosition();
@@ -267,18 +261,57 @@ public class MainActivity extends AppCompatActivity {
                         repository.addCustomTaskNetwork(hm.getHouseholdId(), taskName, selectedFreq.days, result -> refreshFragments());
                     }
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
     
-    private void refreshFragments() {
-        androidx.fragment.app.Fragment f0 = getSupportFragmentManager().findFragmentByTag("f0");
-        if (f0 instanceof ActiveTasksFragment) {
-            ((ActiveTasksFragment) f0).refreshTasks();
+    private void setupTabs(TabLayout tabLayout) {
+        if (tabLayoutMediator != null) {
+            tabLayoutMediator.detach();
         }
-        androidx.fragment.app.Fragment f1 = getSupportFragmentManager().findFragmentByTag("f1");
-        if (f1 instanceof TaskCatalogFragment) {
-            ((TaskCatalogFragment) f1).refreshTasks();
+        tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager,
+                (tab, position) -> {
+                    if (position == 0) {
+                        tab.setText(R.string.tab_todo);
+                    } else if (position == 1) {
+                        tab.setText(R.string.tab_tasks);
+                    } else if (position == 2) {
+                        String hName = HouseholdManager.getInstance(this).getHouseholdName();
+                        if (hName != null && !hName.isEmpty()) {
+                            tab.setText(getString(R.string.household_highscore_title, hName));
+                        } else {
+                            tab.setText(R.string.household_highscore_default);
+                        }
+                    } else {
+                        tab.setText(R.string.global_highscores_title);
+                    }
+                }
+        );
+        tabLayoutMediator.attach();
+    }
+    
+    public void refreshFragments() {
+        adapter.notifyDataSetChanged();
+        TabLayout tabLayout = findViewById(R.id.tab_layout);
+        if (tabLayout != null) {
+            setupTabs(tabLayout);
+        }
+        for (androidx.fragment.app.Fragment fragment : getSupportFragmentManager().getFragments()) {
+            if (fragment instanceof ActiveTasksFragment) {
+                ((ActiveTasksFragment) fragment).refreshTasks();
+            } else if (fragment instanceof TaskCatalogFragment) {
+                ((TaskCatalogFragment) fragment).refreshTasks();
+            } else if (fragment instanceof com.app.housekeeping.fragment.HighscoresFragment) {
+                ((com.app.housekeeping.fragment.HighscoresFragment) fragment).refreshHighscores();
+            }
+        }
+    }
+
+    public void refreshHighscores() {
+        for (androidx.fragment.app.Fragment fragment : getSupportFragmentManager().getFragments()) {
+            if (fragment instanceof com.app.housekeeping.fragment.HighscoresFragment) {
+                ((com.app.housekeeping.fragment.HighscoresFragment) fragment).refreshHighscores();
+            }
         }
     }
 
@@ -295,22 +328,21 @@ public class MainActivity extends AppCompatActivity {
                     sendIntent.putExtra(Intent.EXTRA_STREAM, uri);
                     sendIntent.setType("text/csv");
                     sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    startActivity(Intent.createChooser(sendIntent, "Export Tasks"));
+                    startActivity(Intent.createChooser(sendIntent, getString(R.string.export_tasks)));
                 } else {
-                    Toast.makeText(MainActivity.this, "Failed to export tasks", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.export_failed, Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onError(String error) {
-                Toast.makeText(MainActivity.this, "Export error: " + error, Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, getString(R.string.export_error, error), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void importCsv(Uri uri) {
-        try {
-            InputStream inputStream = getContentResolver().openInputStream(uri);
+        try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
             if (inputStream != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
                 StringBuilder sb = new StringBuilder();
@@ -318,25 +350,24 @@ public class MainActivity extends AppCompatActivity {
                 while ((line = reader.readLine()) != null) {
                     sb.append(line).append("\n");
                 }
-                inputStream.close();
                 
                 HouseholdManager hm = HouseholdManager.getInstance(this);
                 repository.importCsvNetwork(hm.getHouseholdId(), sb.toString(), new TaskRepository.RepositoryCallback<Void>() {
                     @Override
                     public void onSuccess(Void result) {
-                        Toast.makeText(MainActivity.this, "Import successful", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, R.string.import_success, Toast.LENGTH_SHORT).show();
                         refreshFragments();
                     }
 
                     @Override
                     public void onError(String error) {
-                        Toast.makeText(MainActivity.this, "Import error: " + error, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, getString(R.string.import_error, error), Toast.LENGTH_SHORT).show();
                     }
                 });
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, "Error importing CSV", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.import_csv_error, Toast.LENGTH_SHORT).show();
         }
     }
 }

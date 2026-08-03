@@ -2,9 +2,16 @@ from pydantic import BaseModel
 
 class HouseholdCreate(BaseModel):
     name: str
+    user_name: str | None = None
+    user_uuid: str | None = None
 
 class HouseholdJoin(BaseModel):
     join_code: str
+    user_name: str | None = None
+    user_uuid: str | None = None
+
+class MarkDoneRequest(BaseModel):
+    user_uuid: str | None = None
 
 class ActivateTaskRequest(BaseModel):
     catalog_task_id: int

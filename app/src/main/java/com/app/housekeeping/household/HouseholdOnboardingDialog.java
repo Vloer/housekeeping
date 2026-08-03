@@ -20,6 +20,7 @@ public class HouseholdOnboardingDialog {
 
     public interface OnHouseholdSetupListener {
         void onHouseholdSetupSuccess();
+        default void onHouseholdSetupDismissed() {}
     }
 
     public static void show(Context context, OnHouseholdSetupListener listener) {
@@ -30,6 +31,8 @@ public class HouseholdOnboardingDialog {
         TextInputLayout inputLayoutCode = view.findViewById(R.id.input_layout_code);
         EditText editName = view.findViewById(R.id.edit_household_name);
         EditText editCode = view.findViewById(R.id.edit_join_code);
+
+        EditText editUserName = view.findViewById(R.id.edit_user_name);
 
         radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.radio_create) {
@@ -44,22 +47,37 @@ public class HouseholdOnboardingDialog {
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setView(view)
                 .setCancelable(true)
-                .setPositiveButton("Continue", null)
-                .setNegativeButton("Cancel", (d, which) -> d.dismiss())
+                .setPositiveButton(R.string.continue_button, null)
+                .setNegativeButton(R.string.cancel, (d, which) -> d.dismiss())
                 .create();
+
+        dialog.setOnDismissListener(d -> {
+            if (listener != null) {
+                listener.onHouseholdSetupDismissed();
+            }
+        });
 
         dialog.show();
 
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String userName = editUserName.getText().toString().trim();
+            if (userName.isEmpty()) {
+                Toast.makeText(context, R.string.please_enter_user_name, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String userUuid = HouseholdManager.getInstance(context).getUserUuid();
+
             if (radioCreate.isChecked()) {
                 String name = editName.getText().toString().trim();
                 if (name.isEmpty()) {
-                    Toast.makeText(context, "Please enter a household name", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, R.string.please_enter_household_name, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 try {
                     JSONObject body = new JSONObject();
                     body.put("name", name);
+                    body.put("user_name", userName);
+                    body.put("user_uuid", userUuid);
                     ApiClient.post("/households/create", body, new ApiClient.ApiCallback<JSONObject>() {
                         @Override
                         public void onSuccess(JSONObject result) {
@@ -67,32 +85,35 @@ public class HouseholdOnboardingDialog {
                                 int id = result.getInt("household_id");
                                 String hName = result.getString("name");
                                 String code = result.getString("join_code");
-                                HouseholdManager.getInstance(context).addHousehold(id, hName, code);
-                                Toast.makeText(context, "Household Created! Code: " + code, Toast.LENGTH_LONG).show();
+                                String uName = result.optString("username", userName);
+                                HouseholdManager.getInstance(context).addHousehold(id, hName, code, uName);
+                                Toast.makeText(context, context.getString(R.string.household_created_toast, code), Toast.LENGTH_LONG).show();
                                 dialog.dismiss();
                                 if (listener != null) listener.onHouseholdSetupSuccess();
                             } catch (Exception e) {
-                                Toast.makeText(context, "Error reading server response", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(context, R.string.error_server_response, Toast.LENGTH_SHORT).show();
                             }
                         }
 
                         @Override
                         public void onError(String errorMessage) {
-                            Toast.makeText(context, "Failed: " + errorMessage, Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, context.getString(R.string.failed_with_error, errorMessage), Toast.LENGTH_LONG).show();
                         }
                     });
                 } catch (Exception e) {
-                    Toast.makeText(context, "Request error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, R.string.request_error, Toast.LENGTH_SHORT).show();
                 }
             } else {
                 String code = editCode.getText().toString().trim().toUpperCase();
                 if (code.isEmpty()) {
-                    Toast.makeText(context, "Please enter a join code", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, R.string.please_enter_join_code, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 try {
                     JSONObject body = new JSONObject();
                     body.put("join_code", code);
+                    body.put("user_name", userName);
+                    body.put("user_uuid", userUuid);
                     ApiClient.post("/households/join", body, new ApiClient.ApiCallback<JSONObject>() {
                         @Override
                         public void onSuccess(JSONObject result) {
@@ -100,22 +121,23 @@ public class HouseholdOnboardingDialog {
                                 int id = result.getInt("household_id");
                                 String hName = result.getString("name");
                                 String jCode = result.getString("join_code");
-                                HouseholdManager.getInstance(context).addHousehold(id, hName, jCode);
-                                Toast.makeText(context, "Joined Household: " + hName, Toast.LENGTH_LONG).show();
+                                String uName = result.optString("username", userName);
+                                HouseholdManager.getInstance(context).addHousehold(id, hName, jCode, uName);
+                                Toast.makeText(context, context.getString(R.string.joined_household_toast, hName), Toast.LENGTH_LONG).show();
                                 dialog.dismiss();
                                 if (listener != null) listener.onHouseholdSetupSuccess();
                             } catch (Exception e) {
-                                Toast.makeText(context, "Error reading server response", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(context, R.string.error_server_response, Toast.LENGTH_SHORT).show();
                             }
                         }
 
                         @Override
                         public void onError(String errorMessage) {
-                            Toast.makeText(context, "Failed: " + errorMessage, Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, context.getString(R.string.failed_with_error, errorMessage), Toast.LENGTH_LONG).show();
                         }
                     });
                 } catch (Exception e) {
-                    Toast.makeText(context, "Request error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, R.string.request_error, Toast.LENGTH_SHORT).show();
                 }
             }
         });

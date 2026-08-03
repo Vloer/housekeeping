@@ -53,3 +53,11 @@ deploy.sh
 
 # Docs
 server/README.md
+
+# Agents
+.agents
+
+# Database
+*.db
+*.db.bak
+*.csv

@@ -2,6 +2,14 @@ plugins {
     id 'com.android.application'
 }
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+}
+def baseUrl = localProperties.getProperty('BASE_URL') ?: System.getenv('BASE_URL') ?: ""
+def authToken = localProperties.getProperty('AUTH_TOKEN') ?: System.getenv('AUTH_TOKEN') ?: ""
+
 android {
     namespace 'com.app.housekeeping'
     compileSdk 34
@@ -12,6 +20,13 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
+
+        buildConfigField "String", "BASE_URL", "\"${baseUrl}\""
+        buildConfigField "String", "AUTH_TOKEN", "\"${authToken}\""
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     buildTypes {

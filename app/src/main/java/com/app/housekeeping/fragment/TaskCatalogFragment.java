@@ -97,14 +97,14 @@ public class TaskCatalogFragment extends Fragment implements TaskCatalogAdapter.
         final int[] selectedIndex = {checkedItem};
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("Select Frequency")
+                .setTitle(R.string.select_frequency)
                 .setSingleChoiceItems(labels, checkedItem, (dialog, which) -> selectedIndex[0] = which)
-                .setPositiveButton("Activate", (dialog, which) -> {
+                .setPositiveButton(R.string.activate, (dialog, which) -> {
                     Frequency selectedFreq = frequencies[selectedIndex[0]];
                     HouseholdManager hm = HouseholdManager.getInstance(requireContext());
                     repository.activateTaskNetwork(hm.getHouseholdId(), task.getId(), selectedFreq.days, result -> refreshTasks());
                 })
-                .setNegativeButton("Cancel", (dialog, which) -> {
+                .setNegativeButton(R.string.cancel, (dialog, which) -> {
                     refreshTasks();
                 })
                 .setOnCancelListener(dialog -> refreshTasks())
@@ -114,13 +114,13 @@ public class TaskCatalogFragment extends Fragment implements TaskCatalogAdapter.
     @Override
     public void onTaskDeactivated(CatalogTask task) {
         new AlertDialog.Builder(requireContext())
-                .setTitle("Deactivate Task")
-                .setMessage("Are you sure you want to deactivate " + task.getName() + "?")
-                .setPositiveButton("Deactivate", (dialog, which) -> {
+                .setTitle(R.string.deactivate_task_title)
+                .setMessage(getString(R.string.confirm_deactivate_name, task.getName()))
+                .setPositiveButton(R.string.deactivate, (dialog, which) -> {
                     HouseholdManager hm = HouseholdManager.getInstance(requireContext());
                     repository.deactivateTaskNetwork(hm.getHouseholdId(), task.getId(), result -> refreshTasks());
                 })
-                .setNegativeButton("Cancel", (dialog, which) -> {
+                .setNegativeButton(R.string.cancel, (dialog, which) -> {
                     refreshTasks();
                 })
                 .setOnCancelListener(dialog -> refreshTasks())
@@ -149,9 +149,9 @@ public class TaskCatalogFragment extends Fragment implements TaskCatalogAdapter.
         }
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("Edit Task")
+                .setTitle(R.string.edit_task)
                 .setView(dialogView)
-                .setPositiveButton("Save", (dialog, which) -> {
+                .setPositiveButton(R.string.save, (dialog, which) -> {
                     String updatedName = editTaskName.getText().toString().trim();
                     if (!updatedName.isEmpty()) {
                         int pos = spinnerFrequency.getSelectedItemPosition();
@@ -162,7 +162,7 @@ public class TaskCatalogFragment extends Fragment implements TaskCatalogAdapter.
                         }
                     }
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 }

@@ -77,6 +77,17 @@ public class HouseholdManager {
         return null;
     }
 
+    private static final String KEY_USER_UUID = "user_uuid";
+
+    public String getUserUuid() {
+        String uuid = prefs.getString(KEY_USER_UUID, null);
+        if (uuid == null || uuid.isEmpty()) {
+            uuid = java.util.UUID.randomUUID().toString();
+            prefs.edit().putString(KEY_USER_UUID, uuid).apply();
+        }
+        return uuid;
+    }
+
     public List<Household> getJoinedHouseholds() {
         List<Household> list = new ArrayList<>();
         String jsonStr = prefs.getString(KEY_HOUSEHOLDS_JSON, "");
@@ -88,7 +99,8 @@ public class HouseholdManager {
                     int id = obj.getInt("id");
                     String name = obj.getString("name");
                     String code = obj.getString("joinCode");
-                    list.add(new Household(id, name, code));
+                    String username = obj.optString("username", "");
+                    list.add(new Household(id, name, code, username));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -98,18 +110,25 @@ public class HouseholdManager {
     }
 
     public void addHousehold(int householdId, String householdName, String joinCode) {
+        addHousehold(householdId, householdName, joinCode, "");
+    }
+
+    public void addHousehold(int householdId, String householdName, String joinCode, String username) {
         List<Household> list = getJoinedHouseholds();
         boolean exists = false;
         for (Household h : list) {
             if (h.getId() == householdId) {
                 h.setName(householdName);
                 h.setJoinCode(joinCode);
+                if (username != null && !username.isEmpty()) {
+                    h.setUsername(username);
+                }
                 exists = true;
                 break;
             }
         }
         if (!exists) {
-            list.add(new Household(householdId, householdName, joinCode));
+            list.add(new Household(householdId, householdName, joinCode, username));
         }
 
         saveHouseholdsList(list);
@@ -128,6 +147,7 @@ public class HouseholdManager {
                 obj.put("id", h.getId());
                 obj.put("name", h.getName());
                 obj.put("joinCode", h.getJoinCode());
+                obj.put("username", h.getUsername());
                 array.put(obj);
             }
             prefs.edit().putString(KEY_HOUSEHOLDS_JSON, array.toString()).apply();

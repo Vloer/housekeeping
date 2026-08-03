@@ -17,14 +17,59 @@
     <string name="frequency">Frequency</string>
     <string name="add">Add</string>
     <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="activate">Activate</string>
+    <string name="deactivate">Deactivate</string>
     <string name="select_frequency">Select Frequency</string>
     <string name="notification_channel_name">Daily Task Reminders</string>
     <string name="notification_title">Housekeeping Tasks</string>
     <string name="confirm_deactivate">Remove this task from your active list?</string>
+    <string name="confirm_deactivate_name">Are you sure you want to deactivate %s?</string>
+    <string name="deactivate_task_title">Deactivate Task</string>
+    <string name="edit_task">Edit Task</string>
+    <string name="edit_last_done_date">Edit Last Done Date</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="last_done_label">Last Done: %s ✏️</string>
     <string name="due_by_label">Due By: %s</string>
     <string name="never">Never</string>
     <string name="not_set">Not set</string>
+
+    <!-- Household & Navigation -->
+    <string name="title_household_housekeeping">%s housekeeping</string>
+    <string name="select_household">Select Household</string>
+    <string name="create_or_join_household">+ Create or Join Household</string>
+    <string name="household_info">Household Info</string>
+    <string name="household_info_message">Household Name: %1$s\n\nJoin Code: %2$s</string>
+    <string name="copy_code">Copy Code</string>
+    <string name="join_code_label">Join Code</string>
+    <string name="code_copied_toast">Join Code copied to clipboard</string>
+    <string name="switch_household">Switch Household</string>
+    <string name="close">Close</string>
+
+    <!-- Highscores -->
+    <string name="household_highscore_title">%s 🏆</string>
+    <string name="household_highscore_default">Household 🏆</string>
+    <string name="global_highscores_title">Global 🏆</string>
+    <string name="no_highscores_title">No Highscores Yet</string>
+    <string name="no_highscores_subtitle">Complete tasks to earn points!</string>
+
+    <!-- Task Management & CSV -->
+    <string name="export_tasks">Export Tasks</string>
+    <string name="export_failed">Failed to export tasks</string>
+    <string name="export_error">Export error: %s</string>
+    <string name="import_success">Import successful</string>
+    <string name="import_error">Import error: %s</string>
+    <string name="import_csv_error">Error importing CSV</string>
+
+    <!-- Onboarding Dialog -->
+    <string name="please_enter_user_name">Please enter your name</string>
+    <string name="please_enter_household_name">Please enter a household name</string>
+    <string name="please_enter_join_code">Please enter a join code</string>
+    <string name="household_created_toast">Household Created! Code: %s</string>
+    <string name="joined_household_toast">Joined Household: %s</string>
+    <string name="error_server_response">Error reading server response</string>
+    <string name="request_error">Request error</string>
+    <string name="failed_with_error">Failed: %s</string>
+    <string name="continue_button">Continue</string>
 </resources>

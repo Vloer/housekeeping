@@ -42,5 +42,18 @@ def init_db():
         FOREIGN KEY(catalog_task_id) REFERENCES task_catalog(id)
     )
     """)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS household_members (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        household_id INTEGER NOT NULL,
+        user_uuid TEXT NOT NULL,
+        username TEXT NOT NULL,
+        points INTEGER NOT NULL DEFAULT 0,
+        joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(household_id) REFERENCES households(id),
+        UNIQUE(household_id, user_uuid),
+        UNIQUE(household_id, username)
+    )
+    """)
     conn.commit()
     conn.close()

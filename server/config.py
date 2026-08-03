@@ -1,4 +1,7 @@
-DB_PATH = "housekeeping_server.db"
+import os
+
+DB_PATH = os.getenv("DB_PATH", "housekeeping_server.db")
+API_AUTH_TOKEN = os.getenv("API_AUTH_TOKEN", "hk_secret_token_2026")
 
 PREINSTALLED_TASKS = [
     ("Mow gras", 182),

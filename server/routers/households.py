@@ -33,8 +33,25 @@ def create_household(req: HouseholdCreate, db: sqlite3.Connection = Depends(get_
             (household_id, name, freq)
         )
     
+    username = req.user_name.strip() if req.user_name else "User"
+    user_uuid = req.user_uuid.strip() if req.user_uuid else ""
+    if user_uuid:
+        cursor.execute(
+            "SELECT id FROM household_members WHERE household_id = ? AND UPPER(username) = UPPER(?)",
+            (household_id, username)
+        )
+        if cursor.fetchone():
+            raise HTTPException(
+                status_code=400,
+                detail=f"The username '{username}' is already taken in this household. Please choose a different name."
+            )
+        cursor.execute(
+            "INSERT INTO household_members (household_id, user_uuid, username, points) VALUES (?, ?, ?, 0)",
+            (household_id, user_uuid, username)
+        )
+    
     db.commit()
-    return {"household_id": household_id, "name": req.name, "join_code": join_code}
+    return {"household_id": household_id, "name": req.name, "join_code": join_code, "username": username}
 
 @router.post("/join")
 def join_household(req: HouseholdJoin, db: sqlite3.Connection = Depends(get_db)):
@@ -44,7 +61,36 @@ def join_household(req: HouseholdJoin, db: sqlite3.Connection = Depends(get_db))
     row = cursor.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Invalid join code. Household not found.")
-    return {"household_id": row["id"], "name": row["name"], "join_code": row["join_code"]}
+    
+    household_id = row["id"]
+    username = req.user_name.strip() if req.user_name else "User"
+    user_uuid = req.user_uuid.strip() if req.user_uuid else ""
+    
+    if user_uuid:
+        cursor.execute(
+            "SELECT username FROM household_members WHERE household_id = ? AND user_uuid = ?",
+            (household_id, user_uuid)
+        )
+        member_row = cursor.fetchone()
+        if member_row:
+            username = member_row["username"]
+        else:
+            cursor.execute(
+                "SELECT id FROM household_members WHERE household_id = ? AND UPPER(username) = UPPER(?)",
+                (household_id, username)
+            )
+            if cursor.fetchone():
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"The username '{username}' is already taken in this household. Please choose a different name."
+                )
+            cursor.execute(
+                "INSERT INTO household_members (household_id, user_uuid, username, points) VALUES (?, ?, ?, 0)",
+                (household_id, user_uuid, username)
+            )
+            db.commit()
+            
+    return {"household_id": household_id, "name": row["name"], "join_code": row["join_code"], "username": username}
 
 @router.get("/{household_id}/info")
 def get_household_info(household_id: int, db: sqlite3.Connection = Depends(get_db)):

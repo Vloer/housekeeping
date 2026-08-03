@@ -3,6 +3,8 @@ package com.app.housekeeping.network;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.app.housekeeping.BuildConfig;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -18,7 +20,8 @@ import java.util.concurrent.Executors;
 
 public class ApiClient {
 
-    public static String BASE_URL = "http://62.238.4.160:8000/api";
+    public static final String BASE_URL = BuildConfig.BASE_URL;
+    private static volatile String authToken = null;
 
     private static final ExecutorService executor = Executors.newFixedThreadPool(4);
     private static final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -28,14 +31,34 @@ public class ApiClient {
         void onError(String errorMessage);
     }
 
+    public static void setAuthToken(String token) {
+        authToken = token;
+    }
+
+    public static String getAuthToken() {
+        if (authToken != null && !authToken.isEmpty()) {
+            return authToken;
+        }
+        return BuildConfig.AUTH_TOKEN;
+    }
+
+    private static void applyDefaultHeaders(HttpURLConnection conn) {
+        conn.setRequestProperty("Accept", "application/json");
+        String token = getAuthToken();
+        if (token != null && !token.isEmpty()) {
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+        }
+    }
+
     public static void post(String endpoint, JSONObject jsonBody, ApiCallback<JSONObject> callback) {
         executor.execute(() -> {
+            HttpURLConnection conn = null;
             try {
                 URL url = new URL(BASE_URL + endpoint);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json; utf-8");
-                conn.setRequestProperty("Accept", "application/json");
+                applyDefaultHeaders(conn);
                 conn.setConnectTimeout(8000);
                 conn.setReadTimeout(8000);
                 conn.setDoOutput(true);
@@ -68,17 +91,22 @@ public class ApiClient {
             } catch (Exception e) {
                 e.printStackTrace();
                 mainHandler.post(() -> callback.onError(e.getMessage() != null ? e.getMessage() : "Network error"));
+            } finally {
+                if (conn != null) {
+                    conn.disconnect();
+                }
             }
         });
     }
 
     public static void getArray(String endpoint, ApiCallback<JSONArray> callback) {
         executor.execute(() -> {
+            HttpURLConnection conn = null;
             try {
                 URL url = new URL(BASE_URL + endpoint);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
-                conn.setRequestProperty("Accept", "application/json");
+                applyDefaultHeaders(conn);
                 conn.setConnectTimeout(8000);
                 conn.setReadTimeout(8000);
 
@@ -103,17 +131,22 @@ public class ApiClient {
             } catch (Exception e) {
                 e.printStackTrace();
                 mainHandler.post(() -> callback.onError(e.getMessage() != null ? e.getMessage() : "Network error"));
+            } finally {
+                if (conn != null) {
+                    conn.disconnect();
+                }
             }
         });
     }
 
     public static void getObject(String endpoint, ApiCallback<JSONObject> callback) {
         executor.execute(() -> {
+            HttpURLConnection conn = null;
             try {
                 URL url = new URL(BASE_URL + endpoint);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
-                conn.setRequestProperty("Accept", "application/json");
+                applyDefaultHeaders(conn);
                 conn.setConnectTimeout(8000);
                 conn.setReadTimeout(8000);
 
@@ -138,6 +171,10 @@ public class ApiClient {
             } catch (Exception e) {
                 e.printStackTrace();
                 mainHandler.post(() -> callback.onError(e.getMessage() != null ? e.getMessage() : "Network error"));
+            } finally {
+                if (conn != null) {
+                    conn.disconnect();
+                }
             }
         });
     }

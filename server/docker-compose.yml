@@ -6,6 +6,8 @@ services:
     container_name: housekeeping-api
     ports:
       - "8000:8000"
+    environment:
+      - API_AUTH_TOKEN=${API_AUTH_TOKEN:-hk_secret_token_2026}
     volumes:
       # Mount local directory to persist SQLite database outside container
       - .:/app

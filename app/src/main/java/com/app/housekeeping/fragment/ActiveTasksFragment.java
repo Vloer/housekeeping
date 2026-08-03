@@ -116,7 +116,13 @@ public class ActiveTasksFragment extends Fragment implements ActiveTaskAdapter.O
     @Override
     public void onTaskDone(ActiveTask task) {
         if (repository != null) {
-            repository.markDoneNetwork(task.getId(), result -> refreshTasks());
+            String uuid = HouseholdManager.getInstance(requireContext()).getUserUuid();
+            repository.markDoneNetwork(task.getId(), uuid, result -> {
+                refreshTasks();
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).refreshHighscores();
+                }
+            });
         }
     }
 
@@ -144,7 +150,7 @@ public class ActiveTasksFragment extends Fragment implements ActiveTaskAdapter.O
                 cal.get(Calendar.MONTH),
                 cal.get(Calendar.DAY_OF_MONTH)
         );
-        dialog.setTitle("Edit Last Done Date");
+        dialog.setTitle(getString(R.string.edit_last_done_date));
         dialog.show();
     }
 
@@ -170,9 +176,9 @@ public class ActiveTasksFragment extends Fragment implements ActiveTaskAdapter.O
         }
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("Edit Task")
+                .setTitle(R.string.edit_task)
                 .setView(dialogView)
-                .setPositiveButton("Save", (dialog, which) -> {
+                .setPositiveButton(R.string.save, (dialog, which) -> {
                     String updatedName = editTaskName.getText().toString().trim();
                     if (!updatedName.isEmpty()) {
                         int pos = spinnerFrequency.getSelectedItemPosition();
@@ -183,7 +189,7 @@ public class ActiveTasksFragment extends Fragment implements ActiveTaskAdapter.O
                         }
                     }
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 }

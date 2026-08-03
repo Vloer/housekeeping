@@ -108,9 +108,20 @@ def get_all_active_tasks_unsorted(household_id: int, db: sqlite3.Connection = De
 def activate_task(household_id: int, req: ActivateTaskRequest, db: sqlite3.Connection = Depends(get_db)):
     cursor = db.cursor()
     cursor.execute(
-        "INSERT INTO active_tasks (household_id, catalog_task_id, frequency_days, notified_this_cycle) VALUES (?, ?, ?, 0)",
-        (household_id, req.catalog_task_id, req.frequency_days)
+        "SELECT id FROM active_tasks WHERE household_id = ? AND catalog_task_id = ?",
+        (household_id, req.catalog_task_id)
     )
+    existing = cursor.fetchone()
+    if existing:
+        cursor.execute(
+            "UPDATE active_tasks SET frequency_days = ?, notified_this_cycle = 0 WHERE id = ?",
+            (req.frequency_days, existing["id"])
+        )
+    else:
+        cursor.execute(
+            "INSERT INTO active_tasks (household_id, catalog_task_id, frequency_days, notified_this_cycle) VALUES (?, ?, ?, 0)",
+            (household_id, req.catalog_task_id, req.frequency_days)
+        )
     db.commit()
     return {"status": "success"}
 

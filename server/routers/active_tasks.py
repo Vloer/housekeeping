@@ -3,17 +3,29 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 
 from database import get_db
-from schemas import UpdateLastDoneRequest, UpdateDueDateRequest
+from schemas import UpdateLastDoneRequest, UpdateDueDateRequest, MarkDoneRequest
 
 router = APIRouter(prefix="/api/active-tasks", tags=["Active Tasks"])
 
 @router.post("/{active_task_id}/mark-done")
-def mark_done(active_task_id: int, db: sqlite3.Connection = Depends(get_db)):
+def mark_done(active_task_id: int, req: MarkDoneRequest = None, db: sqlite3.Connection = Depends(get_db)):
     cursor = db.cursor()
+    cursor.execute("SELECT household_id, frequency_days FROM active_tasks WHERE id = ?", (active_task_id,))
+    task_row = cursor.fetchone()
+    
     today_str = datetime.now().strftime("%Y-%m-%d")
     cursor.execute("UPDATE active_tasks SET last_done_date = ?, notified_this_cycle = 0 WHERE id = ?", (today_str, active_task_id))
+    
+    points_awarded = 0
+    if task_row and req and req.user_uuid:
+        points_awarded = task_row["frequency_days"]
+        cursor.execute(
+            "UPDATE household_members SET points = points + ? WHERE household_id = ? AND user_uuid = ?",
+            (points_awarded, task_row["household_id"], req.user_uuid)
+        )
+    
     db.commit()
-    return {"status": "success", "last_done_date": today_str}
+    return {"status": "success", "last_done_date": today_str, "points_awarded": points_awarded}
 
 @router.post("/{active_task_id}/update-last-done")
 def update_last_done(active_task_id: int, req: UpdateLastDoneRequest, db: sqlite3.Connection = Depends(get_db)):
