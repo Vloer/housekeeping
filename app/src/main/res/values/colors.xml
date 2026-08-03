@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="green_not_due">#4CAF50</color>
+    <color name="light_green_due_soon">#8BC34A</color>
+    <color name="orange_overdue">#FF9800</color>
+    <color name="dark_red_very_overdue">#B71C1C</color>
+    <color name="white">#FFFFFF</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="background">#FAFAFA</color>
+    <color name="card_background">#FFFFFF</color>
+</resources>

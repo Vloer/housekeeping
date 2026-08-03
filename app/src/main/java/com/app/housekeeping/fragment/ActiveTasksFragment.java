@@ -1,0 +1,184 @@
+package com.app.housekeeping.fragment;
+
+import android.app.DatePickerDialog;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.Spinner;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.app.housekeeping.R;
+import com.app.housekeeping.adapter.ActiveTaskAdapter;
+import com.app.housekeeping.database.TaskRepository;
+import com.app.housekeeping.model.ActiveTask;
+import com.app.housekeeping.model.Frequency;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+public class ActiveTasksFragment extends Fragment implements ActiveTaskAdapter.OnTaskActionListener {
+
+    private RecyclerView recyclerView;
+    private View emptyState;
+    private ActiveTaskAdapter adapter;
+    private TaskRepository repository;
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_active_tasks, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        
+        recyclerView = view.findViewById(R.id.recycler_active_tasks);
+        emptyState = view.findViewById(R.id.empty_state);
+        
+        repository = TaskRepository.getInstance(requireContext());
+        
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        adapter = new ActiveTaskAdapter(new ArrayList<>(), this);
+        recyclerView.setAdapter(adapter);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshTasks();
+    }
+    
+    private void refreshTasks() {
+        if (repository != null && adapter != null) {
+            List<ActiveTask> tasks = repository.getActiveTasks();
+            adapter.updateTasks(tasks);
+            
+            if (tasks.isEmpty()) {
+                recyclerView.setVisibility(View.GONE);
+                emptyState.setVisibility(View.VISIBLE);
+            } else {
+                recyclerView.setVisibility(View.VISIBLE);
+                emptyState.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    @Override
+    public void onTaskDone(ActiveTask task) {
+        if (repository != null) {
+            repository.markDone(task.getId());
+            refreshTasks();
+        }
+    }
+
+    @Override
+    public void onEditLastDoneDate(ActiveTask task) {
+        Calendar cal = Calendar.getInstance();
+        if (task.getLastDoneDate() != null && !task.getLastDoneDate().isEmpty()) {
+            try {
+                Date date = dateFormat.parse(task.getLastDoneDate());
+                if (date != null) cal.setTime(date);
+            } catch (Exception ignored) {}
+        }
+
+        DatePickerDialog dialog = new DatePickerDialog(
+                requireContext(),
+                (view, year, month, dayOfMonth) -> {
+                    Calendar selected = Calendar.getInstance();
+                    selected.set(year, month, dayOfMonth);
+                    String newDateStr = dateFormat.format(selected.getTime());
+                    if (repository != null) {
+                        repository.updateLastDoneDate(task.getId(), newDateStr);
+                        refreshTasks();
+                    }
+                },
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH)
+        );
+        dialog.setTitle("Edit Last Done Date");
+        dialog.show();
+    }
+
+    @Override
+    public void onEditDueDate(ActiveTask task) {
+        Calendar cal = Calendar.getInstance();
+        if (task.getDueDate() != null && !task.getDueDate().isEmpty()) {
+            try {
+                Date date = dateFormat.parse(task.getDueDate());
+                if (date != null) cal.setTime(date);
+            } catch (Exception ignored) {}
+        }
+
+        DatePickerDialog dialog = new DatePickerDialog(
+                requireContext(),
+                (view, year, month, dayOfMonth) -> {
+                    Calendar selected = Calendar.getInstance();
+                    selected.set(year, month, dayOfMonth);
+                    String newDueDateStr = dateFormat.format(selected.getTime());
+                    if (repository != null) {
+                        repository.updateDueDate(task.getId(), newDueDateStr, task.getFrequencyDays());
+                        refreshTasks();
+                    }
+                },
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH)
+        );
+        dialog.setTitle("Edit Due Date");
+        dialog.show();
+    }
+
+    @Override
+    public void onEditTask(ActiveTask task) {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_task, null);
+        EditText editTaskName = dialogView.findViewById(R.id.edit_task_name);
+        Spinner spinnerFrequency = dialogView.findViewById(R.id.spinner_frequency);
+
+        editTaskName.setText(task.getTaskName());
+
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, Frequency.getLabels());
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerFrequency.setAdapter(spinnerAdapter);
+
+        Frequency[] frequencies = Frequency.values();
+        for (int i = 0; i < frequencies.length; i++) {
+            if (frequencies[i].days == task.getFrequencyDays()) {
+                spinnerFrequency.setSelection(i);
+                break;
+            }
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Edit Task")
+                .setView(dialogView)
+                .setPositiveButton("Save", (dialog, which) -> {
+                    String updatedName = editTaskName.getText().toString().trim();
+                    if (!updatedName.isEmpty()) {
+                        int pos = spinnerFrequency.getSelectedItemPosition();
+                        Frequency selectedFreq = frequencies[pos];
+                        if (repository != null) {
+                            repository.updateTask(task.getCatalogTaskId(), updatedName, selectedFreq.days);
+                            refreshTasks();
+                        }
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+}

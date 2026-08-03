@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Housekeeping</string>
+    <string name="tab_todo">To Do</string>
+    <string name="tab_tasks">Tasks</string>
+    <string name="add_custom_task">Add Custom Task</string>
+    <string name="export_csv">Export CSV</string>
+    <string name="import_csv">Import CSV</string>
+    <string name="all_caught_up">All caught up! 🎉</string>
+    <string name="no_tasks_message">No tasks are due. Enjoy your free time!</string>
+    <string name="done">Done</string>
+    <string name="due_today">Due today</string>
+    <string name="days_overdue">%d days overdue</string>
+    <string name="due_in_days">Due in %d days</string>
+    <string name="due_tomorrow">Due tomorrow</string>
+    <string name="task_name">Task name</string>
+    <string name="frequency">Frequency</string>
+    <string name="add">Add</string>
+    <string name="cancel">Cancel</string>
+    <string name="select_frequency">Select Frequency</string>
+    <string name="notification_channel_name">Daily Task Reminders</string>
+    <string name="notification_title">Housekeeping Tasks</string>
+    <string name="confirm_deactivate">Remove this task from your active list?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="last_done_label">Last Done: %s ✏️</string>
+    <string name="due_by_label">Due By: %s ✏️</string>
+    <string name="never">Never</string>
+    <string name="not_set">Not set</string>
+</resources>
