@@ -74,8 +74,51 @@ public class HighscoresFragment extends Fragment {
         repository = TaskRepository.getInstance(requireContext());
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new HighscoreAdapter(new ArrayList<>());
+        HighscoreAdapter.OnUserClickListener clickListener = !isGlobal ? this::showUserTaskStatsDialog : null;
+        adapter = new HighscoreAdapter(new ArrayList<>(), clickListener);
         recyclerView.setAdapter(adapter);
+    }
+
+    private void showUserTaskStatsDialog(HighscoreEntry entry) {
+        if (!isAdded() || repository == null || householdId == -1) return;
+
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_user_task_stats, null);
+        RecyclerView recyclerViewStats = dialogView.findViewById(R.id.recycler_user_task_stats);
+        View emptyText = dialogView.findViewById(R.id.text_empty_stats);
+
+        recyclerViewStats.setLayoutManager(new LinearLayoutManager(requireContext()));
+
+        String title = getString(R.string.user_task_stats_title, entry.getUsername());
+
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle(title)
+                .setView(dialogView)
+                .setPositiveButton(R.string.close, null)
+                .create();
+
+        repository.getUserTaskStatsNetwork(householdId, entry.getUserUuid(), new TaskRepository.RepositoryCallback<List<com.app.housekeeping.model.UserTaskStat>>() {
+            @Override
+            public void onSuccess(List<com.app.housekeeping.model.UserTaskStat> stats) {
+                if (!isAdded()) return;
+                if (stats.isEmpty()) {
+                    recyclerViewStats.setVisibility(View.GONE);
+                    emptyText.setVisibility(View.VISIBLE);
+                } else {
+                    recyclerViewStats.setVisibility(View.VISIBLE);
+                    emptyText.setVisibility(View.GONE);
+                    recyclerViewStats.setAdapter(new com.app.housekeeping.adapter.UserTaskStatAdapter(stats));
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                if (!isAdded()) return;
+                recyclerViewStats.setVisibility(View.GONE);
+                emptyText.setVisibility(View.VISIBLE);
+            }
+        });
+
+        dialog.show();
     }
 
     @Override

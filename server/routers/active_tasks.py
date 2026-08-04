@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/active-tasks", tags=["Active Tasks"])
 @router.post("/{active_task_id}/mark-done")
 def mark_done(active_task_id: int, req: MarkDoneRequest = None, db: sqlite3.Connection = Depends(get_db)):
     cursor = db.cursor()
-    cursor.execute("SELECT household_id, frequency_days FROM active_tasks WHERE id = ?", (active_task_id,))
+    cursor.execute("SELECT household_id, catalog_task_id, frequency_days FROM active_tasks WHERE id = ?", (active_task_id,))
     task_row = cursor.fetchone()
     
     today_str = datetime.now().strftime("%Y-%m-%d")
@@ -22,6 +22,10 @@ def mark_done(active_task_id: int, req: MarkDoneRequest = None, db: sqlite3.Conn
         cursor.execute(
             "UPDATE household_members SET points = points + ? WHERE household_id = ? AND user_uuid = ?",
             (points_awarded, task_row["household_id"], req.user_uuid)
+        )
+        cursor.execute(
+            "INSERT INTO task_completions (household_id, user_uuid, catalog_task_id, points_awarded) VALUES (?, ?, ?, ?)",
+            (task_row["household_id"], req.user_uuid, task_row["catalog_task_id"], points_awarded)
         )
     
     db.commit()

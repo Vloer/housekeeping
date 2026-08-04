@@ -55,5 +55,17 @@ def init_db():
         UNIQUE(household_id, username)
     )
     """)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS task_completions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        household_id INTEGER NOT NULL,
+        user_uuid TEXT NOT NULL,
+        catalog_task_id INTEGER NOT NULL,
+        points_awarded INTEGER NOT NULL DEFAULT 0,
+        completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(household_id) REFERENCES households(id),
+        FOREIGN KEY(catalog_task_id) REFERENCES task_catalog(id)
+    )
+    """)
     conn.commit()
     conn.close()

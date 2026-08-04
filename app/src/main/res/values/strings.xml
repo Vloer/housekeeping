@@ -80,4 +80,9 @@
     <string name="dark_mode">Dark Mode</string>
     <string name="system_default">System Default</string>
     <string name="toggle_theme">Theme</string>
+
+    <!-- User Task Stats -->
+    <string name="user_task_stats_title">%s\'s Task Stats</string>
+    <string name="no_completed_tasks_yet">No completed tasks recorded yet.</string>
+    <string name="user_task_stat_format">%1$dx (%2$d points)</string>
 </resources>

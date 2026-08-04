@@ -16,9 +16,19 @@ import java.util.List;
 public class HighscoreAdapter extends RecyclerView.Adapter<HighscoreAdapter.ViewHolder> {
 
     private List<HighscoreEntry> entries;
+    private OnUserClickListener listener;
+
+    public interface OnUserClickListener {
+        void onUserClick(HighscoreEntry entry);
+    }
 
     public HighscoreAdapter(List<HighscoreEntry> entries) {
+        this(entries, null);
+    }
+
+    public HighscoreAdapter(List<HighscoreEntry> entries, OnUserClickListener listener) {
         this.entries = entries;
+        this.listener = listener;
     }
 
     public void updateEntries(List<HighscoreEntry> newEntries) {
@@ -39,6 +49,12 @@ public class HighscoreAdapter extends RecyclerView.Adapter<HighscoreAdapter.View
         holder.textRank.setText("#" + entry.getRank());
         holder.textUsername.setText(entry.getUsername());
         holder.textPoints.setText(entry.getPoints() + " pts");
+
+        if (listener != null) {
+            holder.itemView.setOnClickListener(v -> listener.onUserClick(entry));
+        } else {
+            holder.itemView.setOnClickListener(null);
+        }
     }
 
     @Override

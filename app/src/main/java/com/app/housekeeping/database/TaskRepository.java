@@ -282,6 +282,32 @@ public class TaskRepository {
         });
     }
 
+    public void getUserTaskStatsNetwork(int householdId, String userUuid, RepositoryCallback<List<com.app.housekeeping.model.UserTaskStat>> callback) {
+        ApiClient.getArray("/highscores/household/" + householdId + "/user/" + userUuid + "/tasks", new ApiClient.ApiCallback<JSONArray>() {
+            @Override
+            public void onSuccess(JSONArray result) {
+                List<com.app.housekeeping.model.UserTaskStat> list = new ArrayList<>();
+                try {
+                    for (int i = 0; i < result.length(); i++) {
+                        JSONObject obj = result.getJSONObject(i);
+                        String taskName = obj.getString("task_name");
+                        int count = obj.getInt("completions_count");
+                        int points = obj.optInt("total_points", 0);
+                        list.add(new com.app.housekeeping.model.UserTaskStat(taskName, count, points));
+                    }
+                    callback.onSuccess(list);
+                } catch (Exception e) {
+                    callback.onError("Parsing error: " + e.getMessage());
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                callback.onError(errorMessage);
+            }
+        });
+    }
+
     public void updateLastDoneDateNetwork(int activeTaskId, String lastDoneDate, RepositoryCallback<Void> callback) {
         try {
             JSONObject body = new JSONObject();
