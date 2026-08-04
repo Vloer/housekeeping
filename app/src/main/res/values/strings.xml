@@ -60,7 +60,7 @@
     <string name="export_error">Export error: %s</string>
     <string name="import_success">Import successful</string>
     <string name="import_error">Import error: %s</string>
-    <string name="import_csv_error">Error importing CSV</string>
+    <string name="import_csv_error">Error importing CSV</string>w
 
     <!-- Onboarding Dialog -->
     <string name="please_enter_user_name">Please enter your name</string>
@@ -72,4 +72,12 @@
     <string name="request_error">Request error</string>
     <string name="failed_with_error">Failed: %s</string>
     <string name="continue_button">Continue</string>
+    <string name="task_completed_toast">%1$s completed 🎉\nNext date: %2$s</string>
+
+    <!-- Theme / Dark Mode -->
+    <string name="choose_theme">Choose Theme</string>
+    <string name="light_mode">Light Mode</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="system_default">System Default</string>
+    <string name="toggle_theme">Theme</string>
 </resources>

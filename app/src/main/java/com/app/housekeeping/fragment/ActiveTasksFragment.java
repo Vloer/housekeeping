@@ -9,6 +9,8 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -116,8 +118,17 @@ public class ActiveTasksFragment extends Fragment implements ActiveTaskAdapter.O
     @Override
     public void onTaskDone(ActiveTask task) {
         if (repository != null) {
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.DAY_OF_YEAR, task.getFrequencyDays());
+            String nextDueDateStr = dateFormat.format(cal.getTime());
+
             String uuid = HouseholdManager.getInstance(requireContext()).getUserUuid();
             repository.markDoneNetwork(task.getId(), uuid, result -> {
+                if (isAdded()) {
+                    Toast.makeText(requireContext(),
+                            getString(R.string.task_completed_toast, task.getTaskName(), nextDueDateStr),
+                            Toast.LENGTH_LONG).show();
+                }
                 refreshTasks();
                 if (getActivity() instanceof MainActivity) {
                     ((MainActivity) getActivity()).refreshHighscores();

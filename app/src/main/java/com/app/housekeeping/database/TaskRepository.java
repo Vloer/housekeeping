@@ -61,6 +61,9 @@ public class TaskRepository {
                         task.setDefaultFrequencyDays(obj.getInt("default_frequency_days"));
                         task.setActive(obj.getBoolean("is_active"));
                         task.setFrequencyDays(obj.getInt("frequency_days"));
+                        task.setActiveTaskId(obj.optInt("active_id", -1));
+                        task.setLastDoneDate(obj.optString("last_done_date", null));
+                        task.setDueDate(obj.optString("due_date", null));
                         tasks.add(task);
                     }
                     callback.onSuccess(tasks);

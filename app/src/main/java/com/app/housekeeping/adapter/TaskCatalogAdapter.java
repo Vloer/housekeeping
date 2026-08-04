@@ -26,6 +26,7 @@ public class TaskCatalogAdapter extends RecyclerView.Adapter<TaskCatalogAdapter.
         void onTaskActivated(CatalogTask task);
         void onTaskDeactivated(CatalogTask task);
         void onEditTask(CatalogTask task);
+        void onEditLastDoneDate(CatalogTask task);
     }
 
     public TaskCatalogAdapter(List<CatalogTask> initialTasks, OnTaskToggleListener listener) {
@@ -64,8 +65,28 @@ public class TaskCatalogAdapter extends RecyclerView.Adapter<TaskCatalogAdapter.
         if (task.isActive()) {
             holder.textFrequency.setVisibility(View.VISIBLE);
             holder.textFrequency.setText(String.format("Every %d days", task.getFrequencyDays()));
+
+            holder.layoutDates.setVisibility(View.VISIBLE);
+
+            String lastDoneStr = task.getLastDoneDate() != null && !task.getLastDoneDate().isEmpty()
+                    ? task.getLastDoneDate()
+                    : holder.itemView.getContext().getString(R.string.never);
+            holder.textLastDone.setText(holder.itemView.getContext().getString(R.string.last_done_label, lastDoneStr));
+
+            String dueByStr = task.getDueDate() != null && !task.getDueDate().isEmpty()
+                    ? task.getDueDate()
+                    : holder.itemView.getContext().getString(R.string.not_set);
+            holder.textDueBy.setText(holder.itemView.getContext().getString(R.string.due_by_label, dueByStr));
+
+            holder.textLastDone.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onEditLastDoneDate(task);
+                }
+            });
         } else {
             holder.textFrequency.setVisibility(View.GONE);
+            holder.layoutDates.setVisibility(View.GONE);
+            holder.textLastDone.setOnClickListener(null);
         }
         
         holder.switchActive.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -94,12 +115,18 @@ public class TaskCatalogAdapter extends RecyclerView.Adapter<TaskCatalogAdapter.
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView textTaskName;
         TextView textFrequency;
+        View layoutDates;
+        TextView textLastDone;
+        TextView textDueBy;
         SwitchCompat switchActive;
 
         ViewHolder(View itemView) {
             super(itemView);
             textTaskName = itemView.findViewById(R.id.text_task_name);
             textFrequency = itemView.findViewById(R.id.text_frequency);
+            layoutDates = itemView.findViewById(R.id.layout_dates);
+            textLastDone = itemView.findViewById(R.id.text_last_done);
+            textDueBy = itemView.findViewById(R.id.text_due_by);
             switchActive = itemView.findViewById(R.id.switch_active);
         }
     }

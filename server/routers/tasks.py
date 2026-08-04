@@ -17,7 +17,8 @@ def get_catalog_tasks(household_id: int, db: sqlite3.Connection = Depends(get_db
     cursor = db.cursor()
     query = """
     SELECT c.id, c.name, c.is_custom, c.default_frequency_days,
-           a.id AS active_id, a.frequency_days
+           a.id AS active_id, a.frequency_days, a.last_done_date,
+           date(a.last_done_date, '+' || a.frequency_days || ' days') AS due_date
     FROM task_catalog c
     LEFT JOIN active_tasks a ON c.id = a.catalog_task_id AND a.household_id = c.household_id
     WHERE c.household_id = ?
@@ -29,13 +30,18 @@ def get_catalog_tasks(household_id: int, db: sqlite3.Connection = Depends(get_db
     for r in rows:
         is_active = r["active_id"] is not None
         freq_days = r["frequency_days"] if is_active else r["default_frequency_days"]
+        last_done = r["last_done_date"] if is_active else None
+        due_date = r["due_date"] if is_active else None
         result.append({
             "id": r["id"],
             "name": r["name"],
             "is_custom": bool(r["is_custom"]),
             "default_frequency_days": r["default_frequency_days"],
             "is_active": is_active,
-            "frequency_days": freq_days
+            "active_id": r["active_id"],
+            "frequency_days": freq_days,
+            "last_done_date": last_done,
+            "due_date": due_date
         })
     return result
 

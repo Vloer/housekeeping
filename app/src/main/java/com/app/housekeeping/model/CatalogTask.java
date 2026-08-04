@@ -7,6 +7,9 @@ public class CatalogTask {
     private int defaultFrequencyDays;
     private boolean isActive;
     private int frequencyDays;
+    private int activeTaskId;
+    private String lastDoneDate;
+    private String dueDate;
 
     public CatalogTask() {}
 
@@ -27,4 +30,13 @@ public class CatalogTask {
 
     public int getFrequencyDays() { return frequencyDays; }
     public void setFrequencyDays(int frequencyDays) { this.frequencyDays = frequencyDays; }
+
+    public int getActiveTaskId() { return activeTaskId; }
+    public void setActiveTaskId(int activeTaskId) { this.activeTaskId = activeTaskId; }
+
+    public String getLastDoneDate() { return lastDoneDate; }
+    public void setLastDoneDate(String lastDoneDate) { this.lastDoneDate = lastDoneDate; }
+
+    public String getDueDate() { return dueDate; }
+    public void setDueDate(String dueDate) { this.dueDate = dueDate; }
 }

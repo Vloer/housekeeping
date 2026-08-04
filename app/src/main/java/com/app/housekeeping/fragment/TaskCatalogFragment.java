@@ -165,4 +165,35 @@ public class TaskCatalogFragment extends Fragment implements TaskCatalogAdapter.
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
+
+    @Override
+    public void onEditLastDoneDate(CatalogTask task) {
+        if (!task.isActive() || task.getActiveTaskId() <= 0) return;
+
+        java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US);
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        if (task.getLastDoneDate() != null && !task.getLastDoneDate().isEmpty()) {
+            try {
+                java.util.Date date = dateFormat.parse(task.getLastDoneDate());
+                if (date != null) cal.setTime(date);
+            } catch (Exception ignored) {}
+        }
+
+        android.app.DatePickerDialog dialog = new android.app.DatePickerDialog(
+                requireContext(),
+                (view, year, month, dayOfMonth) -> {
+                    java.util.Calendar selected = java.util.Calendar.getInstance();
+                    selected.set(year, month, dayOfMonth);
+                    String newDateStr = dateFormat.format(selected.getTime());
+                    if (repository != null) {
+                        repository.updateLastDoneDateNetwork(task.getActiveTaskId(), newDateStr, result -> refreshTasks());
+                    }
+                },
+                cal.get(java.util.Calendar.YEAR),
+                cal.get(java.util.Calendar.MONTH),
+                cal.get(java.util.Calendar.DAY_OF_MONTH)
+        );
+        dialog.setTitle(getString(R.string.edit_last_done_date));
+        dialog.show();
+    }
 }

@@ -172,9 +172,47 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.import_csv) {
             openDocumentLauncher.launch(new String[]{"text/*"});
             return true;
+        } else if (id == R.id.toggle_theme) {
+            showThemeSelectionDialog();
+            return true;
         }
         
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showThemeSelectionDialog() {
+        String[] options = new String[]{
+                getString(R.string.light_mode),
+                getString(R.string.dark_mode),
+                getString(R.string.system_default)
+        };
+
+        int currentMode = com.app.housekeeping.util.ThemeManager.getSavedThemeMode(this);
+        int selectedIndex;
+        if (currentMode == androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO) {
+            selectedIndex = 0;
+        } else if (currentMode == androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES) {
+            selectedIndex = 1;
+        } else {
+            selectedIndex = 2;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.choose_theme)
+                .setSingleChoiceItems(options, selectedIndex, (dialog, which) -> {
+                    int mode;
+                    if (which == 0) {
+                        mode = androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO;
+                    } else if (which == 1) {
+                        mode = androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES;
+                    } else {
+                        mode = androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+                    }
+                    com.app.housekeeping.util.ThemeManager.setThemeMode(this, mode);
+                    dialog.dismiss();
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 
     private void showSwitchHouseholdDialog() {
