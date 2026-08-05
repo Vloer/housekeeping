@@ -57,7 +57,7 @@ def get_active_tasks(household_id: int, db: sqlite3.Connection = Depends(get_db)
     JOIN task_catalog c ON a.catalog_task_id = c.id
     WHERE a.household_id = ?
       AND (a.last_done_date IS NULL OR julianday('now', 'localtime') - julianday(date(a.last_done_date, '+' || a.frequency_days || ' days')) >= -2)
-    ORDER BY a.frequency_days ASC, days_overdue DESC
+    ORDER BY a.frequency_days ASC, days_overdue ASC
     """
     cursor.execute(query, (household_id,))
     rows = cursor.fetchall()

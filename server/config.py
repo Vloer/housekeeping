@@ -5,7 +5,7 @@ API_AUTH_TOKEN = os.getenv("API_AUTH_TOKEN", "hk_secret_token_2026")
 
 PREINSTALLED_TASKS = [
     ("Mow gras", 182),
-    ("Replace bed sheets", 14),
+    ("Bed replace sheets", 7),
     ("Bathroom", 14),
     ("Toilets", 14),
     ("Kitchen cabinets outside", 30),
@@ -38,6 +38,6 @@ PREINSTALLED_TASKS = [
     ("Doors", 365),
     ("Bathroom ground lines", 365),
     ("Kitchen extractor hood", 365),
-    ("Bed baby", 14),
+    ("Bed baby", 7),
     ("Dryer maintenance", 30)
 ]

@@ -14,6 +14,38 @@ def generate_join_code() -> str:
     rand_str = "".join(random.choices(chars, k=4))
     return f"HK-{rand_str}"
 
+@router.post("/check-join")
+def check_join(req: HouseholdJoin, db: sqlite3.Connection = Depends(get_db)):
+    cursor = db.cursor()
+    code = req.join_code.strip().upper()
+    cursor.execute("SELECT id, name, join_code FROM households WHERE UPPER(join_code) = ?", (code,))
+    row = cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Invalid join code. Household not found.")
+    
+    household_id = row["id"]
+    user_uuid = req.user_uuid.strip() if req.user_uuid else ""
+    
+    existing_username = None
+    is_member = False
+    if user_uuid:
+        cursor.execute(
+            "SELECT username FROM household_members WHERE household_id = ? AND user_uuid = ?",
+            (household_id, user_uuid)
+        )
+        member_row = cursor.fetchone()
+        if member_row:
+            existing_username = member_row["username"]
+            is_member = True
+            
+    return {
+        "household_id": household_id,
+        "name": row["name"],
+        "join_code": row["join_code"],
+        "is_member": is_member,
+        "existing_username": existing_username
+    }
+
 @router.post("/create")
 def create_household(req: HouseholdCreate, db: sqlite3.Connection = Depends(get_db)):
     cursor = db.cursor()
@@ -63,8 +95,8 @@ def join_household(req: HouseholdJoin, db: sqlite3.Connection = Depends(get_db))
         raise HTTPException(status_code=404, detail="Invalid join code. Household not found.")
     
     household_id = row["id"]
-    username = req.user_name.strip() if req.user_name else "User"
     user_uuid = req.user_uuid.strip() if req.user_uuid else ""
+    username = req.user_name.strip() if req.user_name else ""
     
     if user_uuid:
         cursor.execute(
@@ -73,8 +105,15 @@ def join_household(req: HouseholdJoin, db: sqlite3.Connection = Depends(get_db))
         )
         member_row = cursor.fetchone()
         if member_row:
+            # User is already a member of this household -> lock to existing username
             username = member_row["username"]
         else:
+            # User is joining this household for the FIRST time -> require username
+            if not username:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Please enter your name for this household."
+                )
             cursor.execute(
                 "SELECT id FROM household_members WHERE household_id = ? AND UPPER(username) = UPPER(?)",
                 (household_id, username)
