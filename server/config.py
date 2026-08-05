@@ -13,7 +13,7 @@ PREINSTALLED_TASKS = [
     ("Mop bathroom", 30),
     ("Mop toilets", 30),
     ("Oven", 30),
-    ("Coffeemaker", 30),
+    ("Coffee machine", 30),
     ("Shower", 60),
     ("Mop upstairs", 60),
     ("Laundromat cleaning program", 60),

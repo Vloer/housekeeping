@@ -7,7 +7,7 @@ import { Colors } from '../src/theme/colors';
 export default function RootLayout() {
   return (
     <HouseholdProvider>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <Stack
         screenOptions={{
           headerStyle: {
@@ -15,7 +15,7 @@ export default function RootLayout() {
           },
           headerTintColor: Colors.text,
           headerTitleStyle: {
-            fontWeight: 'bold',
+            fontWeight: '700',
           },
           contentStyle: {
             backgroundColor: Colors.background,
@@ -26,7 +26,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="onboarding"
           options={{
-            headerTitle: 'Welcome to Housekeeping',
+            headerTitle: 'Housekeeping',
             headerBackVisible: false,
             gestureEnabled: false,
           }}

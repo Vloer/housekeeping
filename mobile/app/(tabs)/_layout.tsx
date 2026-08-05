@@ -36,12 +36,16 @@ export default function TabLayout() {
       screenOptions={{
         headerStyle: {
           backgroundColor: Colors.surface,
-          shadowColor: 'transparent',
-          elevation: 0,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.05,
+          shadowRadius: 3,
+          elevation: 2,
         },
         headerTintColor: Colors.text,
         headerTitleStyle: {
-          fontWeight: '700',
+          fontWeight: '800',
+          fontSize: 18,
         },
         headerRight: () => (
           <TouchableOpacity
@@ -49,11 +53,11 @@ export default function TabLayout() {
             onPress={handleSwitchHousehold}
             activeOpacity={0.7}
           >
-            <Ionicons name="home-outline" size={16} color={Colors.primaryLight} />
+            <Ionicons name="home-outline" size={15} color={Colors.primary} />
             <Text style={styles.switchButtonText} numberOfLines={1}>
               {household?.name || 'Switch'}
             </Text>
-            <Ionicons name="swap-horizontal" size={16} color={Colors.textSecondary} />
+            <Ionicons name="swap-horizontal" size={15} color={Colors.textSecondary} />
           </TouchableOpacity>
         ),
         tabBarStyle: {
@@ -62,30 +66,45 @@ export default function TabLayout() {
           height: 56 + bottomInset,
           paddingBottom: bottomInset,
           paddingTop: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.04,
+          shadowRadius: 6,
+          elevation: 4,
         },
-        tabBarActiveTintColor: Colors.primaryLight,
+        tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textMuted,
+        tabBarLabelStyle: {
+          fontWeight: '600',
+          fontSize: 11,
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Active Tasks',
-          tabBarIcon: ({ color, size }) => <Ionicons name="checkbox-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'checkbox' : 'checkbox-outline'} size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="catalog"
         options={{
           title: 'Task Catalog',
-          tabBarIcon: ({ color, size }) => <Ionicons name="list-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'list' : 'list-outline'} size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="highscores"
         options={{
           title: 'Leaderboard',
-          tabBarIcon: ({ color, size }) => <Ionicons name="trophy-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'trophy' : 'trophy-outline'} size={size} color={color} />
+          ),
         }}
       />
     </Tabs>
@@ -96,11 +115,11 @@ const styles = StyleSheet.create({
   switchButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surfaceSoft,
     paddingHorizontal: 12,
     paddingVertical: 6,
     marginRight: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: Colors.border,
     gap: 6,
@@ -109,7 +128,7 @@ const styles = StyleSheet.create({
   switchButtonText: {
     color: Colors.text,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     flexShrink: 1,
   },
 });

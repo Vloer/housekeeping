@@ -11,42 +11,60 @@ interface TaskCardProps {
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onLongPress }) => {
+  const isOverdue = task.days_overdue > 0;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isDueToday = task.days_overdue === 0 || task.due_date === todayStr;
+
+  // Lenient Overdue Progression: 1-3d -> 4-7d -> 8-14d -> >14d
+  const getOverdueTheme = (days: number) => {
+    if (days <= 3) {
+      return { text: '#F87171', bg: '#FEF2F2', border: 'rgba(248, 113, 113, 0.3)' }; // Light Warm Red
+    }
+    if (days <= 7) {
+      return { text: '#EF4444', bg: '#FEE2E2', border: 'rgba(239, 68, 68, 0.3)' }; // Medium Red
+    }
+    if (days <= 14) {
+      return { text: '#DC2626', bg: '#FEE2E2', border: 'rgba(220, 38, 38, 0.4)' }; // Deep Red
+    }
+    return { text: '#991B1B', bg: '#FEE2E2', border: 'rgba(153, 27, 27, 0.4)' }; // Intense Red
+  };
+
   const getStatusBadge = () => {
-    const todayStr = new Date().toISOString().split('T')[0];
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
-    const isOverdue = task.days_overdue > 0;
-    const isDueToday = task.days_overdue === 0 || task.due_date === todayStr;
     const isDueTomorrow = task.days_overdue === -1 || task.due_date === tomorrowStr;
 
+    // Overdue -> Lenient Progressive Red (1-3d, 4-7d, 8-14d, >14d)
     if (isOverdue) {
+      const theme = getOverdueTheme(task.days_overdue);
       return (
-        <View style={[styles.badge, { backgroundColor: Colors.badgeOverdue }]}>
-          <Text style={styles.badgeText}>Overdue ({task.days_overdue}d)</Text>
-        </View>
-      );
-    }
-    if (isDueToday) {
-      return (
-        <View style={[styles.badge, { backgroundColor: Colors.badgeDueSoon }]}>
-          <Text style={styles.badgeText}>Due Today</Text>
-        </View>
-      );
-    }
-    if (isDueTomorrow) {
-      return (
-        <View style={[styles.badge, { backgroundColor: Colors.badgeDueSoon }]}>
-          <Text style={styles.badgeText}>Due Tomorrow</Text>
+        <View style={[styles.badge, { backgroundColor: theme.bg, borderColor: theme.border }]}>
+          <Ionicons name="alert-circle" size={12} color={theme.text} style={{ marginRight: 4 }} />
+          <Text style={[styles.badgeText, { color: theme.text }]}>{task.days_overdue}d overdue</Text>
         </View>
       );
     }
 
+    // Due Today -> Amber / Soft Yellow
+    if (isDueToday) {
+      return (
+        <View style={[styles.badge, { backgroundColor: Colors.accentSoft, borderColor: 'rgba(244, 162, 97, 0.3)' }]}>
+          <Ionicons name="time" size={12} color={Colors.accent} style={{ marginRight: 4 }} />
+          <Text style={[styles.badgeText, { color: Colors.accent }]}>Due Today</Text>
+        </View>
+      );
+    }
+
+    // Due Tomorrow or in X Days -> Green (Positive / On Track)
     const inDays = Math.abs(task.days_overdue);
     return (
-      <View style={[styles.badge, { backgroundColor: Colors.badgeOk }]}>
-        <Text style={styles.badgeText}>Due in {inDays} days</Text>
+      <View style={[styles.badge, { backgroundColor: Colors.secondarySoft, borderColor: 'rgba(42, 157, 143, 0.3)' }]}>
+        <Ionicons name="checkmark-circle-outline" size={12} color={Colors.secondary} style={{ marginRight: 4 }} />
+        <Text style={[styles.badgeText, { color: Colors.secondary }]}>
+          {isDueTomorrow ? 'Due Tomorrow' : `Due in ${inDays}d`}
+        </Text>
       </View>
     );
   };
@@ -57,28 +75,29 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onLongPres
       activeOpacity={0.9}
       onLongPress={() => onLongPress?.(task)}
     >
-      {/* Prominent Mark Done Button */}
+      {/* Interactive Checkmark Button */}
       <TouchableOpacity
         style={styles.doneButton}
         onPress={() => onComplete(task.id)}
-        activeOpacity={0.75}
+        activeOpacity={0.7}
         accessibilityLabel="Mark task as completed"
         accessibilityRole="button"
       >
-        <Ionicons name="checkmark-circle" size={32} color={Colors.secondary} />
+        <Ionicons name="checkmark" size={20} color="#FFFFFF" />
       </TouchableOpacity>
 
       <View style={styles.content}>
-        <Text style={styles.title}>{task.task_name}</Text>
+        <Text style={styles.title} numberOfLines={1}>{task.task_name}</Text>
         <View style={styles.metaRow}>
-          <Text style={styles.frequencyText}>Every {task.frequency_days} days</Text>
+          <Text style={styles.frequencyText}>Repeat: {task.frequency_days}d</Text>
+          <Text style={styles.dot}>•</Text>
           {getStatusBadge()}
         </View>
       </View>
 
-      <View style={styles.pointsContainer}>
-        <Text style={styles.pointsText}>+{task.frequency_days}</Text>
-        <Text style={styles.ptsLabel}>pts</Text>
+      <View style={styles.pointsBadge}>
+        <Ionicons name="star" size={12} color={Colors.accent} style={{ marginRight: 3 }} />
+        <Text style={styles.pointsNumber}>+{task.frequency_days}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -89,71 +108,81 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: Colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowColor: Colors.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   doneButton: {
-    marginRight: 14,
-    borderRadius: 20,
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    padding: 2,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: Colors.secondary,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 14,
+    shadowColor: Colors.secondary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   content: {
     flex: 1,
   },
   title: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.text,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+    flexWrap: 'wrap',
   },
   frequencyText: {
     fontSize: 12,
     color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  dot: {
+    fontSize: 12,
+    color: Colors.textMuted,
   },
   badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
   },
   badgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#FFF',
   },
-  pointsContainer: {
+  pointsBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: Colors.accentSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.3)',
+    borderColor: 'rgba(244, 162, 97, 0.3)',
+    marginLeft: 8,
   },
-  pointsText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: Colors.primaryLight,
-  },
-  ptsLabel: {
-    fontSize: 10,
-    color: Colors.textSecondary,
-    fontWeight: '500',
+  pointsNumber: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: Colors.accent,
   },
 });

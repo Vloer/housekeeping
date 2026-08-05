@@ -31,7 +31,7 @@ export const UserStatsModal: React.FC<UserStatsModalProps> = ({ visible, househo
       <View style={styles.overlay}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <Text style={styles.title}>{user?.username}'s Task Stats</Text>
+            <Text style={styles.title}>{user?.username}'s Task Breakdown</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Ionicons name="close" size={24} color={Colors.textSecondary} />
             </TouchableOpacity>
@@ -68,7 +68,7 @@ export const UserStatsModal: React.FC<UserStatsModalProps> = ({ visible, househo
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   container: {
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: Colors.text,
   },
   closeBtn: {
@@ -114,27 +114,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surfaceSoft,
     padding: 14,
-    borderRadius: 12,
+    borderRadius: 14,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   statInfo: {
     flex: 1,
   },
   taskName: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.text,
   },
   completions: {
     fontSize: 12,
     color: Colors.textSecondary,
     marginTop: 2,
+    fontWeight: '500',
   },
   statPoints: {
     fontSize: 15,
-    fontWeight: '700',
-    color: Colors.gold,
+    fontWeight: '800',
+    color: Colors.accent,
   },
 });

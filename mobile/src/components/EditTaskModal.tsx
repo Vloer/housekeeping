@@ -192,7 +192,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ visible, taskData,
               onPress={() => setShowDatePicker(true)}
               activeOpacity={0.7}
             >
-              <Ionicons name="calendar-outline" size={20} color={Colors.primaryLight} />
+              <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
               <Text style={styles.datePickerButtonText}>
                 {selectedDate ? formatDateString(selectedDate) : 'Select Last Done Date'}
               </Text>
@@ -248,7 +248,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ visible, taskData,
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   container: {
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: Colors.text,
   },
   closeBtn: {
@@ -277,13 +277,13 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.textSecondary,
     marginBottom: 6,
     marginTop: 12,
   },
   input: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surfaceSoft,
     borderRadius: 12,
     padding: 14,
     color: Colors.text,
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   datePickerButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surfaceSoft,
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   quickDateChip: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surfaceSoft,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   },
   quickDateText: {
     fontSize: 12,
-    color: Colors.primaryLight,
+    color: Colors.primary,
     fontWeight: '600',
   },
   saveBtn: {
@@ -344,12 +344,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    backgroundColor: Colors.dangerSoft,
     borderRadius: 14,
     paddingVertical: 12,
     marginTop: 12,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: Colors.dangerSoft,
   },
   deleteBtnText: {
     color: Colors.danger,

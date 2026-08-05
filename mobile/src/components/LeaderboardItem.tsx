@@ -14,21 +14,21 @@ export const LeaderboardItem: React.FC<LeaderboardItemProps> = ({ entry, isCurre
   const getRankBadge = () => {
     if (entry.rank === 1) {
       return (
-        <View style={[styles.rankContainer, { backgroundColor: 'rgba(251, 191, 36, 0.2)' }]}>
+        <View style={[styles.rankContainer, { backgroundColor: Colors.accentSoft, borderColor: Colors.gold }]}>
           <Text style={[styles.rankText, { color: Colors.gold }]}>🥇 1</Text>
         </View>
       );
     }
     if (entry.rank === 2) {
       return (
-        <View style={[styles.rankContainer, { backgroundColor: 'rgba(156, 163, 175, 0.2)' }]}>
+        <View style={[styles.rankContainer, { backgroundColor: Colors.surfaceSoft, borderColor: Colors.silver }]}>
           <Text style={[styles.rankText, { color: Colors.silver }]}>🥈 2</Text>
         </View>
       );
     }
     if (entry.rank === 3) {
       return (
-        <View style={[styles.rankContainer, { backgroundColor: 'rgba(217, 119, 6, 0.2)' }]}>
+        <View style={[styles.rankContainer, { backgroundColor: Colors.surfaceSoft, borderColor: Colors.bronze }]}>
           <Text style={[styles.rankText, { color: Colors.bronze }]}>🥉 3</Text>
         </View>
       );
@@ -44,7 +44,7 @@ export const LeaderboardItem: React.FC<LeaderboardItemProps> = ({ entry, isCurre
     <TouchableOpacity
       style={[styles.card, isCurrentUser && styles.currentUserCard]}
       onPress={() => onPress(entry)}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
       {getRankBadge()}
 
@@ -68,28 +68,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: Colors.border,
+    shadowColor: Colors.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   currentUserCard: {
     borderColor: Colors.primary,
-    backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    backgroundColor: Colors.primarySoft,
   },
   rankContainer: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.surfaceLight,
+    backgroundColor: Colors.surfaceSoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   rankText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     color: Colors.text,
   },
   userInfo: {
@@ -97,31 +104,33 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.text,
   },
   currentUserText: {
-    color: Colors.primaryLight,
-    fontWeight: '700',
+    color: Colors.primaryDark,
+    fontWeight: '800',
   },
   pointsBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceLight,
+    backgroundColor: Colors.accentSoft,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
   },
   pointsNumber: {
     fontSize: 16,
-    fontWeight: '700',
-    color: Colors.gold,
+    fontWeight: '800',
+    color: Colors.accent,
   },
   pointsUnit: {
     fontSize: 11,
     color: Colors.textSecondary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   arrow: {
     marginLeft: 4,

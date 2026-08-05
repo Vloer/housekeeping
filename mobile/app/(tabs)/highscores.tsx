@@ -64,6 +64,76 @@ export default function HighscoresScreen() {
 
   const displayScores = tabMode === 'HOUSEHOLD' ? householdHighscores : globalHighscores;
 
+  const firstPlace = displayScores.find((s) => s.rank === 1);
+  const secondPlace = displayScores.find((s) => s.rank === 2);
+  const thirdPlace = displayScores.find((s) => s.rank === 3);
+  const remainingScores = displayScores.filter((s) => s.rank > 3);
+
+  const renderPodium = () => {
+    if (!firstPlace) return null;
+
+    return (
+      <View style={styles.podiumCard}>
+        <Text style={styles.podiumTitle}>
+          {tabMode === 'GLOBAL' ? '🌍 Global Leaderboard' : '🏆 Household Leaderboard'}
+        </Text>
+        <View style={styles.podiumRow}>
+          {/* 2nd Place */}
+          <View style={styles.podiumCol}>
+            {secondPlace ? (
+              <TouchableOpacity onPress={() => handleUserPress(secondPlace)} style={styles.podiumUser}>
+                <View style={[styles.avatarCircle, { borderColor: Colors.silver }]}>
+                  <Text style={styles.avatarText}>{secondPlace.username.charAt(0).toUpperCase()}</Text>
+                  <View style={[styles.rankBadgeMini, { backgroundColor: Colors.silver }]}>
+                    <Text style={styles.rankBadgeText}>2</Text>
+                  </View>
+                </View>
+                <Text style={styles.podiumName} numberOfLines={1}>{secondPlace.username}</Text>
+                <Text style={styles.podiumPts}>{secondPlace.points} pts</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.podiumEmpty} />
+            )}
+          </View>
+
+          {/* 1st Place (Elevated Center) */}
+          <View style={[styles.podiumCol, styles.podiumColCenter]}>
+            <TouchableOpacity onPress={() => handleUserPress(firstPlace)} style={styles.podiumUser}>
+              <View style={[styles.avatarCircle, styles.avatarCircleFirst, { borderColor: Colors.gold }]}>
+                <Text style={styles.avatarTextFirst}>{firstPlace.username.charAt(0).toUpperCase()}</Text>
+                <View style={[styles.rankBadgeMini, { backgroundColor: Colors.gold }]}>
+                  <Text style={styles.rankBadgeText}>1</Text>
+                </View>
+              </View>
+              <Text style={[styles.podiumName, styles.podiumNameFirst]} numberOfLines={1}>
+                👑 {firstPlace.username}
+              </Text>
+              <Text style={styles.podiumPtsFirst}>{firstPlace.points} pts</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* 3rd Place */}
+          <View style={styles.podiumCol}>
+            {thirdPlace ? (
+              <TouchableOpacity onPress={() => handleUserPress(thirdPlace)} style={styles.podiumUser}>
+                <View style={[styles.avatarCircle, { borderColor: Colors.bronze }]}>
+                  <Text style={styles.avatarText}>{thirdPlace.username.charAt(0).toUpperCase()}</Text>
+                  <View style={[styles.rankBadgeMini, { backgroundColor: Colors.bronze }]}>
+                    <Text style={styles.rankBadgeText}>3</Text>
+                  </View>
+                </View>
+                <Text style={styles.podiumName} numberOfLines={1}>{thirdPlace.username}</Text>
+                <Text style={styles.podiumPts}>{thirdPlace.points} pts</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.podiumEmpty} />
+            )}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       {/* Household Info Banner */}
@@ -106,9 +176,10 @@ export default function HighscoresScreen() {
         <ActivityIndicator size="large" color={Colors.primary} style={styles.loader} />
       ) : (
         <FlatList
-          data={displayScores}
+          data={displayScores.length <= 3 ? displayScores : remainingScores}
           keyExtractor={(item, idx) => `${item.user_uuid}-${idx}`}
           contentContainerStyle={styles.list}
+          ListHeaderComponent={displayScores.length > 0 ? renderPodium() : null}
           renderItem={({ item }) => (
             <LeaderboardItem
               entry={item}
@@ -147,16 +218,21 @@ const styles = StyleSheet.create({
     padding: 18,
     margin: 16,
     marginBottom: 12,
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.border,
+    shadowColor: Colors.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   bannerInfo: {
     flex: 1,
   },
   householdName: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: Colors.text,
     marginBottom: 4,
   },
@@ -173,20 +249,20 @@ const styles = StyleSheet.create({
   codeValue: {
     fontSize: 13,
     fontWeight: '800',
-    color: Colors.primaryLight,
+    color: Colors.primary,
     letterSpacing: 1,
   },
   leaveButton: {
     padding: 10,
-    borderRadius: 10,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: 12,
+    backgroundColor: Colors.dangerSoft,
   },
   segmentContainer: {
     flexDirection: 'row',
     backgroundColor: Colors.surface,
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 4,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -197,7 +273,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 10,
     gap: 6,
   },
   segmentActive: {
@@ -211,6 +287,111 @@ const styles = StyleSheet.create({
   segmentTextActive: {
     color: '#FFF',
     fontWeight: '700',
+  },
+  podiumCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    shadowColor: Colors.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  podiumTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.text,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 16,
+  },
+  podiumRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 8,
+  },
+  podiumCol: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  podiumColCenter: {
+    marginBottom: 12,
+  },
+  podiumUser: {
+    alignItems: 'center',
+  },
+  podiumEmpty: {
+    height: 80,
+  },
+  avatarCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.surfaceSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    marginBottom: 6,
+    position: 'relative',
+  },
+  avatarCircleFirst: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: Colors.text,
+  },
+  avatarTextFirst: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: Colors.text,
+  },
+  rankBadgeMini: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rankBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#FFF',
+  },
+  podiumName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.text,
+    marginBottom: 2,
+    maxWidth: 80,
+  },
+  podiumNameFirst: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.primaryDark,
+  },
+  podiumPts: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.accent,
+  },
+  podiumPtsFirst: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.accent,
   },
   loader: {
     marginTop: 40,

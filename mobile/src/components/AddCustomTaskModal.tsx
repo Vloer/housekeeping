@@ -134,7 +134,7 @@ export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible,
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   container: {
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: Colors.text,
   },
   closeBtn: {
@@ -163,13 +163,13 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.textSecondary,
     marginBottom: 6,
     marginTop: 10,
   },
   input: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surfaceSoft,
     borderRadius: 12,
     padding: 14,
     color: Colors.text,
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   freqChip: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surfaceSoft,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
@@ -193,12 +193,12 @@ const styles = StyleSheet.create({
   },
   freqChipActive: {
     backgroundColor: Colors.primary,
-    borderColor: Colors.primaryLight,
+    borderColor: Colors.primary,
   },
   freqChipText: {
     fontSize: 12,
     color: Colors.textSecondary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   freqChipTextActive: {
     color: '#FFF',

@@ -109,7 +109,7 @@ export default function TaskCatalogScreen() {
         )}
       />
 
-      <TouchableOpacity style={styles.fab} onPress={() => setAddModalVisible(true)}>
+      <TouchableOpacity style={styles.fab} onPress={() => setAddModalVisible(true)} activeOpacity={0.85}>
         <Ionicons name="add" size={28} color="#FFF" />
       </TouchableOpacity>
 
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   filterChip: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surfaceSoft,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
@@ -164,12 +164,12 @@ const styles = StyleSheet.create({
   },
   filterChipActive: {
     backgroundColor: Colors.primary,
-    borderColor: Colors.primaryLight,
+    borderColor: Colors.primary,
   },
   filterChipText: {
     fontSize: 13,
     color: Colors.textSecondary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   filterChipTextActive: {
     color: '#FFF',
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 24,
     right: 20,
     width: 56,
     height: 56,

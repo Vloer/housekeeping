@@ -15,7 +15,7 @@ export const CatalogItemCard: React.FC<CatalogItemCardProps> = ({ task, onToggle
   return (
     <TouchableOpacity
       style={styles.card}
-      activeOpacity={0.9}
+      activeOpacity={0.92}
       onLongPress={() => onLongPress?.(task)}
     >
       <View style={styles.content}>
@@ -45,12 +45,12 @@ export const CatalogItemCard: React.FC<CatalogItemCardProps> = ({ task, onToggle
         <Switch
           value={task.is_active}
           onValueChange={() => onToggleActive(task)}
-          trackColor={{ false: Colors.surfaceLight, true: Colors.primary }}
+          trackColor={{ false: Colors.surfaceSoft, true: Colors.primary }}
           thumbColor={task.is_active ? '#FFF' : Colors.textMuted}
         />
         {task.is_custom && onDelete && (
           <TouchableOpacity onPress={() => onDelete(task.id)} style={styles.deleteButton}>
-            <Ionicons name="trash-outline" size={20} color={Colors.danger} />
+            <Ionicons name="trash-outline" size={18} color={Colors.danger} />
           </TouchableOpacity>
         )}
       </View>
@@ -64,11 +64,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Colors.surface,
-    borderRadius: 14,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: Colors.border,
+    shadowColor: Colors.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
   },
   content: {
     flex: 1,
@@ -82,14 +87,16 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.text,
   },
   customBadge: {
-    backgroundColor: 'rgba(245, 158, 11, 0.2)',
-    paddingHorizontal: 6,
+    backgroundColor: Colors.accentSoft,
+    paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
   },
   customBadgeText: {
     fontSize: 10,
@@ -100,6 +107,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     marginBottom: 4,
+    fontWeight: '500',
   },
   datesRow: {
     flexDirection: 'row',
@@ -123,9 +131,9 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   deleteButton: {
-    padding: 4,
+    padding: 6,
   },
 });
