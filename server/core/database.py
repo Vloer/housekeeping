@@ -1,5 +1,5 @@
 import sqlite3
-from config import DB_PATH
+from core.config import DB_PATH
 
 def get_db():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
