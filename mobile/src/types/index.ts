@@ -41,3 +41,15 @@ export interface UserTaskStat {
 }
 
 export type FrequencyType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'AS_NEEDED' | 'ALL';
+
+export const FREQUENCY_PRESETS = [
+  { label: 'Weekly', days: 7 },
+  { label: 'Biweekly', days: 14 },
+  { label: 'Monthly', days: 30 },
+  { label: 'Bimonthly', days: 60 },
+  { label: 'Quarterly', days: 90 },
+  { label: 'Half-Yearly', days: 180 },
+  { label: 'Yearly', days: 365 },
+] as const;
+
+export type FrequencyPreset = typeof FREQUENCY_PRESETS[number];

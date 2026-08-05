@@ -1,29 +1,24 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useHousehold } from '../../src/context/HouseholdContext';
 import { TaskCard } from '../../src/components/TaskCard';
-import { EditTaskModal } from '../../src/components/EditTaskModal';
 import { ActiveTask } from '../../src/types';
 import { Colors } from '../../src/theme/colors';
+import { getTodayStr, getIn7DaysStr, getThisWeekBounds } from '../../src/utils/dateUtils';
 
 export default function ActiveTasksScreen() {
   const router = useRouter();
   const {
     household,
     activeTasks,
-    catalogTasks,
     loading,
     refreshData,
     markTaskDoneOptimistic,
-    updateTaskLastDoneOptimistic,
-    updateTaskDetailsOptimistic,
-    deleteTaskOptimistic,
   } = useHousehold();
 
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [editingTask, setEditingTask] = useState<ActiveTask | null>(null);
 
   useEffect(() => {
     if (!loading && !household) {
@@ -37,61 +32,21 @@ export default function ActiveTasksScreen() {
     setRefreshing(false);
   };
 
-  const handleCompleteTask = async (taskId: number) => {
-    try {
-      const result = await markTaskDoneOptimistic(taskId);
-      Alert.alert('Task Done! 🎉', `Awesome work! You earned +${result.points} points for keeping your home up to date! 🌿`);
-    } catch (err) {
-      Alert.alert('Error', 'Failed to complete task. Please try again.');
-    }
-  };
+  const handleCompleteTask = useCallback(
+    async (taskId: number) => {
+      try {
+        const result = await markTaskDoneOptimistic(taskId);
+        Alert.alert('Task Done! 🎉', `Awesome work! You earned +${result.points} points for keeping your home up to date! 🌿`);
+      } catch (err) {
+        Alert.alert('Error', 'Failed to complete task. Please try again.');
+      }
+    },
+    [markTaskDoneOptimistic]
+  );
 
-  const handleSaveTaskEdits = async (data: {
-    catalogTaskId: number;
-    activeTaskId?: number | null;
-    name: string;
-    frequencyDays: number;
-    lastDoneDate?: string;
-  }) => {
-    await updateTaskDetailsOptimistic(data.catalogTaskId, data.name, data.frequencyDays);
-    if (data.activeTaskId && data.lastDoneDate) {
-      await updateTaskLastDoneOptimistic(data.activeTaskId, data.lastDoneDate);
-    }
-  };
-
-  const handleDeleteCustomTask = async (catalogTaskId: number) => {
-    await deleteTaskOptimistic(catalogTaskId);
-  };
-
-  const todayStr = new Date().toISOString().split('T')[0];
-
-  const in7DaysStr = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 7);
-    return d.toISOString().split('T')[0];
-  }, []);
-
-  // Compute Monday 00:00 to Sunday 23:59 date range for current week
-  const weekRange = useMemo(() => {
-    const now = new Date();
-    const dayOfWeek = now.getDay(); // 0 is Sun, 1 is Mon, ..., 6 is Sat
-    const distToMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-
-    const mon = new Date(now);
-    mon.setDate(now.getDate() - distToMon);
-
-    const sun = new Date(mon);
-    sun.setDate(mon.getDate() + 6);
-
-    const format = (d: Date) => {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
-    };
-
-    return { mondayStr: format(mon), sundayStr: format(sun) };
-  }, []);
+  const todayStr = getTodayStr();
+  const in7DaysStr = getIn7DaysStr();
+  const weekRange = useMemo(() => getThisWeekBounds(), []);
 
   // Track task progress for ALL tasks available/due/completed THIS WEEK
   const thisWeekStats = useMemo(() => {
@@ -126,12 +81,10 @@ export default function ActiveTasksScreen() {
 
     return activeTasks
       .filter((t) => {
-        // If completed today, remove from actionable list for today
         if (t.last_done_date === todayStr) {
           return false;
         }
 
-        // If completed this week, remove unless next due_date is due in less than 7 days
         const wasDoneThisWeek = !!(
           t.last_done_date &&
           t.last_done_date >= mondayStr &&
@@ -144,7 +97,6 @@ export default function ActiveTasksScreen() {
           }
         }
 
-        // Hide tasks whose next due date is > 7 days away
         if (t.due_date && t.due_date > in7DaysStr && t.days_overdue <= 0) {
           return false;
         }
@@ -159,6 +111,18 @@ export default function ActiveTasksScreen() {
       });
   }, [activeTasks, todayStr, weekRange, in7DaysStr]);
 
+  const renderTaskItem = useCallback(
+    ({ item }: { item: ActiveTask }) => (
+      <TaskCard
+        task={item}
+        onComplete={handleCompleteTask}
+      />
+    ),
+    [handleCompleteTask]
+  );
+
+  const keyExtractor = useCallback((item: ActiveTask) => item.id.toString(), []);
+
   if (loading && !refreshing) {
     return (
       <View style={styles.center}>
@@ -167,15 +131,11 @@ export default function ActiveTasksScreen() {
     );
   }
 
-  const currentCatalogTask = editingTask
-    ? catalogTasks.find((c) => c.id === editingTask.catalog_task_id)
-    : null;
-
   return (
     <View style={styles.container}>
       <FlatList
         data={visibleActiveTasks}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={keyExtractor}
         contentContainerStyle={styles.list}
         refreshControl={
           <RefreshControl
@@ -221,7 +181,6 @@ export default function ActiveTasksScreen() {
               </View>
             </View>
 
-            {/* Clear On-Schedule Progress Bar */}
             <View style={styles.progressBarBg}>
               <View
                 style={[
@@ -235,13 +194,10 @@ export default function ActiveTasksScreen() {
             </View>
           </View>
         }
-        renderItem={({ item }) => (
-          <TaskCard
-            task={item}
-            onComplete={handleCompleteTask}
-            onLongPress={(task) => setEditingTask(task)}
-          />
-        )}
+        renderItem={renderTaskItem}
+        removeClippedSubviews
+        maxToRenderPerBatch={10}
+        windowSize={5}
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <View style={styles.emptyIconCircle}>
@@ -253,25 +209,6 @@ export default function ActiveTasksScreen() {
             </Text>
           </View>
         }
-      />
-
-      <EditTaskModal
-        visible={editingTask !== null}
-        taskData={
-          editingTask
-            ? {
-                catalogTaskId: editingTask.catalog_task_id,
-                activeTaskId: editingTask.id,
-                name: editingTask.task_name,
-                frequencyDays: editingTask.frequency_days,
-                lastDoneDate: editingTask.last_done_date,
-                isCustom: !!currentCatalogTask?.is_custom,
-              }
-            : null
-        }
-        onClose={() => setEditingTask(null)}
-        onSave={handleSaveTaskEdits}
-        onDelete={handleDeleteCustomTask}
       />
     </View>
   );

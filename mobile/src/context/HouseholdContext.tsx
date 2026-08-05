@@ -1,14 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 import { Household, ActiveTask, CatalogTask, HighscoreEntry } from '../types';
 import * as api from '../services/api';
+import { storageService } from '../services/storage';
 import { scheduleDailyTaskReminder, requestNotificationPermissions } from '../services/notifications';
-
-const HOUSEHOLD_STORAGE_KEY = '@housekeeping_household';
-const RECENT_HOUSEHOLDS_KEY = '@housekeeping_recent_households';
-const USER_UUID_STORAGE_KEY = '@housekeeping_user_uuid';
-const USER_NAME_STORAGE_KEY = '@housekeeping_user_name';
+import { getTodayStr } from '../utils/dateUtils';
 
 interface HouseholdContextType {
   household: Household | null;
@@ -52,26 +48,21 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     const initStorage = async () => {
       try {
-        let storedUuid = await AsyncStorage.getItem(USER_UUID_STORAGE_KEY);
+        let storedUuid = await storageService.getUserUuid();
         if (!storedUuid) {
           storedUuid = Crypto.randomUUID();
-          await AsyncStorage.setItem(USER_UUID_STORAGE_KEY, storedUuid);
+          await storageService.setUserUuid(storedUuid);
         }
         setUserUuid(storedUuid);
 
-        const storedName = await AsyncStorage.getItem(USER_NAME_STORAGE_KEY);
+        const storedName = await storageService.getUserName();
         if (storedName) setUserName(storedName);
 
-        const storedHouseholdJson = await AsyncStorage.getItem(HOUSEHOLD_STORAGE_KEY);
-        if (storedHouseholdJson) {
-          const parsedHousehold: Household = JSON.parse(storedHouseholdJson);
-          setHousehold(parsedHousehold);
-        }
+        const storedHousehold = await storageService.getHousehold();
+        if (storedHousehold) setHousehold(storedHousehold);
 
-        const storedRecentsJson = await AsyncStorage.getItem(RECENT_HOUSEHOLDS_KEY);
-        if (storedRecentsJson) {
-          setRecentHouseholds(JSON.parse(storedRecentsJson));
-        }
+        const storedRecents = await storageService.getRecentHouseholds();
+        setRecentHouseholds(storedRecents);
       } catch (err) {
         console.error('Failed to initialize storage:', err);
       } finally {
@@ -90,16 +81,13 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [household?.household_id]);
 
   const saveToRecentHouseholds = async (h: Household) => {
-    const filtered = recentHouseholds.filter((item) => item.household_id !== h.household_id);
-    const updated = [h, ...filtered];
+    const updated = await storageService.saveRecentHousehold(h);
     setRecentHouseholds(updated);
-    await AsyncStorage.setItem(RECENT_HOUSEHOLDS_KEY, JSON.stringify(updated));
   };
 
   const removeRecentHousehold = async (householdId: number) => {
-    const updated = recentHouseholds.filter((item) => item.household_id !== householdId);
+    const updated = await storageService.removeRecentHousehold(householdId);
     setRecentHouseholds(updated);
-    await AsyncStorage.setItem(RECENT_HOUSEHOLDS_KEY, JSON.stringify(updated));
   };
 
   const refreshData = async () => {
@@ -126,7 +114,7 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const trimmed = name.trim();
     if (!trimmed) return;
     setUserName(trimmed);
-    await AsyncStorage.setItem(USER_NAME_STORAGE_KEY, trimmed);
+    await storageService.setUserName(trimmed);
   };
 
   const checkJoinHousehold = async (joinCode: string) => {
@@ -138,13 +126,13 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!uuid) {
       uuid = Crypto.randomUUID();
       setUserUuid(uuid);
-      await AsyncStorage.setItem(USER_UUID_STORAGE_KEY, uuid);
+      await storageService.setUserUuid(uuid);
     }
     const res = await api.createHousehold(name, uName, uuid);
     setHousehold(res);
     setUserName(uName);
-    await AsyncStorage.setItem(HOUSEHOLD_STORAGE_KEY, JSON.stringify(res));
-    await AsyncStorage.setItem(USER_NAME_STORAGE_KEY, uName);
+    await storageService.setHousehold(res);
+    await storageService.setUserName(uName);
     await saveToRecentHouseholds(res);
   };
 
@@ -153,21 +141,21 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!uuid) {
       uuid = Crypto.randomUUID();
       setUserUuid(uuid);
-      await AsyncStorage.setItem(USER_UUID_STORAGE_KEY, uuid);
+      await storageService.setUserUuid(uuid);
     }
     const res = await api.joinHousehold(joinCode, uName, uuid);
     setHousehold(res);
     setUserName(res.username);
-    await AsyncStorage.setItem(HOUSEHOLD_STORAGE_KEY, JSON.stringify(res));
-    await AsyncStorage.setItem(USER_NAME_STORAGE_KEY, res.username);
+    await storageService.setHousehold(res);
+    await storageService.setUserName(res.username);
     await saveToRecentHouseholds(res);
   };
 
   const connectRecentHousehold = async (h: Household) => {
     setHousehold(h);
     setUserName(h.username);
-    await AsyncStorage.setItem(HOUSEHOLD_STORAGE_KEY, JSON.stringify(h));
-    await AsyncStorage.setItem(USER_NAME_STORAGE_KEY, h.username);
+    await storageService.setHousehold(h);
+    await storageService.setUserName(h.username);
     await saveToRecentHouseholds(h);
   };
 
@@ -176,19 +164,17 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setActiveTasks([]);
     setCatalogTasks([]);
     setHighscores([]);
-    await AsyncStorage.removeItem(HOUSEHOLD_STORAGE_KEY);
+    await storageService.setHousehold(null);
   };
 
   // Optimistic UI updates
   const markTaskDoneOptimistic = async (activeTaskId: number): Promise<{ points: number }> => {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getTodayStr();
     const previousTasks = [...activeTasks];
     
-    // Find task to get points
     const task = activeTasks.find((t) => t.id === activeTaskId);
     const pointsAwarded = task ? task.frequency_days : 0;
 
-    // Optimistically update local active task list
     setActiveTasks((prev) =>
       prev.map((t) =>
         t.id === activeTaskId
@@ -197,7 +183,6 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       )
     );
 
-    // Optimistically update highscore points
     setHighscores((prev) =>
       prev.map((h) =>
         h.user_uuid === userUuid
@@ -211,7 +196,6 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       refreshData();
       return { points: res.points_awarded };
     } catch (err) {
-      // Revert on error
       setActiveTasks(previousTasks);
       console.error('Failed to mark task done:', err);
       throw err;

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ActiveTask } from '../types';
 import { Colors } from '../theme/colors';
+import { getTodayStr, getOverdueTheme } from '../utils/dateUtils';
 
 interface TaskCardProps {
   task: ActiveTask;
@@ -10,24 +11,10 @@ interface TaskCardProps {
   onLongPress?: (task: ActiveTask) => void;
 }
 
-export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onLongPress }) => {
+const TaskCardComponent: React.FC<TaskCardProps> = ({ task, onComplete, onLongPress }) => {
   const isOverdue = task.days_overdue > 0;
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getTodayStr();
   const isDueToday = task.days_overdue === 0 || task.due_date === todayStr;
-
-  // Lenient Overdue Progression: 1-3d -> 4-7d -> 8-14d -> >14d
-  const getOverdueTheme = (days: number) => {
-    if (days <= 3) {
-      return { text: '#F87171', bg: '#FEF2F2', border: 'rgba(248, 113, 113, 0.3)' }; // Light Warm Red
-    }
-    if (days <= 7) {
-      return { text: '#EF4444', bg: '#FEE2E2', border: 'rgba(239, 68, 68, 0.3)' }; // Medium Red
-    }
-    if (days <= 14) {
-      return { text: '#DC2626', bg: '#FEE2E2', border: 'rgba(220, 38, 38, 0.4)' }; // Deep Red
-    }
-    return { text: '#991B1B', bg: '#FEE2E2', border: 'rgba(153, 27, 27, 0.4)' }; // Intense Red
-  };
 
   const getStatusBadge = () => {
     const tomorrow = new Date();
@@ -36,7 +23,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onLongPres
 
     const isDueTomorrow = task.days_overdue === -1 || task.due_date === tomorrowStr;
 
-    // Overdue -> Lenient Progressive Red (1-3d, 4-7d, 8-14d, >14d)
+    // Overdue -> Lenient Progressive Red
     if (isOverdue) {
       const theme = getOverdueTheme(task.days_overdue);
       return (
@@ -57,7 +44,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onLongPres
       );
     }
 
-    // Due Tomorrow or in X Days -> Green (Positive / On Track)
+    // Due Tomorrow or in X Days -> Green
     const inDays = Math.abs(task.days_overdue);
     return (
       <View style={[styles.badge, { backgroundColor: Colors.secondarySoft, borderColor: 'rgba(42, 157, 143, 0.3)' }]}>
@@ -75,7 +62,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onLongPres
       activeOpacity={0.9}
       onLongPress={() => onLongPress?.(task)}
     >
-      {/* Interactive Checkmark Button */}
       <TouchableOpacity
         style={styles.doneButton}
         onPress={() => onComplete(task.id)}
@@ -102,6 +88,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onLongPres
     </TouchableOpacity>
   );
 };
+
+export const TaskCard = memo(TaskCardComponent);
 
 const styles = StyleSheet.create({
   card: {

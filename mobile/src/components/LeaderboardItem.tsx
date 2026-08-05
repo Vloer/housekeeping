@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { HighscoreEntry } from '../types';
@@ -10,7 +10,7 @@ interface LeaderboardItemProps {
   onPress: (entry: HighscoreEntry) => void;
 }
 
-export const LeaderboardItem: React.FC<LeaderboardItemProps> = ({ entry, isCurrentUser, onPress }) => {
+const LeaderboardItemComponent: React.FC<LeaderboardItemProps> = ({ entry, isCurrentUser, onPress }) => {
   const getRankBadge = () => {
     if (entry.rank === 1) {
       return (
@@ -62,6 +62,8 @@ export const LeaderboardItem: React.FC<LeaderboardItemProps> = ({ entry, isCurre
     </TouchableOpacity>
   );
 };
+
+export const LeaderboardItem = memo(LeaderboardItemComponent);
 
 const styles = StyleSheet.create({
   card: {

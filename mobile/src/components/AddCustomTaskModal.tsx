@@ -1,18 +1,8 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Modal,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { BaseModal } from './common/BaseModal';
 import { Colors } from '../theme/colors';
+import { FREQUENCY_PRESETS } from '../types';
 
 interface AddCustomTaskModalProps {
   visible: boolean;
@@ -20,204 +10,160 @@ interface AddCustomTaskModalProps {
   onAdd: (name: string, frequencyDays: number) => Promise<void>;
 }
 
-const FREQUENCY_OPTIONS = [
-  { label: 'Weekly (7d)', days: 7 },
-  { label: 'Bi-Weekly (14d)', days: 14 },
-  { label: 'Monthly (30d)', days: 30 },
-  { label: 'Quarterly (90d)', days: 90 },
-  { label: 'Yearly (365d)', days: 365 },
-];
-
 export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible, onClose, onAdd }) => {
-  const [name, setName] = useState<string>('');
-  const [selectedDays, setSelectedDays] = useState<number>(14);
-  const [customDaysInput, setCustomDaysInput] = useState<string>('');
-  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [name, setName] = useState('');
+  const [frequencyDays, setFrequencyDays] = useState(30);
+  const [customDaysInput, setCustomDaysInput] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleAdd = async () => {
+  const handleSave = async () => {
     const trimmedName = name.trim();
     if (!trimmedName) {
       Alert.alert('Validation Error', 'Please enter a task name.');
       return;
     }
 
-    let days = selectedDays;
-    if (customDaysInput.trim()) {
-      const parsed = parseInt(customDaysInput.trim(), 10);
+    let finalFreq = frequencyDays;
+    if (customDaysInput) {
+      const parsed = parseInt(customDaysInput, 10);
       if (isNaN(parsed) || parsed <= 0) {
-        Alert.alert('Validation Error', 'Please enter a valid positive number for frequency days.');
+        Alert.alert('Validation Error', 'Please enter a valid number of days.');
         return;
       }
-      days = parsed;
+      finalFreq = parsed;
     }
 
     try {
-      setSubmitting(true);
-      await onAdd(trimmedName, days);
+      setLoading(true);
+      await onAdd(trimmedName, finalFreq);
       setName('');
       setCustomDaysInput('');
-      setSelectedDays(14);
+      setFrequencyDays(30);
       onClose();
     } catch (err) {
-      Alert.alert('Error', 'Failed to add custom task.');
+      Alert.alert('Error', 'Failed to create task. Please try again.');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <View style={styles.container}>
-          <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-            <View style={styles.header}>
-              <Text style={styles.title}>Add Custom Task</Text>
-              <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                <Ionicons name="close" size={24} color={Colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
+    <BaseModal visible={visible} title="Add Custom Task" onClose={onClose}>
+      <Text style={styles.label}>Task Name</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="e.g. Clean air filters"
+        value={name}
+        onChangeText={setName}
+        autoFocus
+      />
 
-            <Text style={styles.label}>Task Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Clean air filters"
-              placeholderTextColor={Colors.textMuted}
-              value={name}
-              onChangeText={setName}
-            />
-
-            <Text style={styles.label}>Frequency</Text>
-            <View style={styles.freqOptions}>
-              {FREQUENCY_OPTIONS.map((opt) => (
-                <TouchableOpacity
-                  key={opt.days}
-                  style={[styles.freqChip, selectedDays === opt.days && !customDaysInput && styles.freqChipActive]}
-                  onPress={() => {
-                    setSelectedDays(opt.days);
-                    setCustomDaysInput('');
-                  }}
-                >
-                  <Text style={[styles.freqChipText, selectedDays === opt.days && !customDaysInput && styles.freqChipTextActive]}>
-                    {opt.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={styles.label}>Or Custom Days</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. 45"
-              placeholderTextColor={Colors.textMuted}
-              keyboardType="number-pad"
-              value={customDaysInput}
-              onChangeText={setCustomDaysInput}
-            />
-
+      <Text style={styles.label}>Repeat Frequency</Text>
+      <View style={styles.chipRow}>
+        {FREQUENCY_PRESETS.map((option) => {
+          const isSelected = frequencyDays === option.days && !customDaysInput;
+          return (
             <TouchableOpacity
-              style={[styles.submitBtn, submitting && styles.submitBtnDisabled]}
-              onPress={handleAdd}
-              disabled={submitting}
+              key={option.label}
+              style={[styles.chip, isSelected && styles.chipSelected]}
+              onPress={() => {
+                setFrequencyDays(option.days);
+                setCustomDaysInput('');
+              }}
             >
-              <Text style={styles.submitBtnText}>{submitting ? 'Adding...' : 'Add to Catalog'}</Text>
+              <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+                {option.label}
+              </Text>
             </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+          );
+        })}
+      </View>
+
+      <Text style={styles.sublabel}>Or enter custom number of days:</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Custom days (e.g. 45)"
+        keyboardType="numeric"
+        value={customDaysInput}
+        onChangeText={setCustomDaysInput}
+      />
+
+      <TouchableOpacity
+        style={[styles.saveButton, loading && styles.disabled]}
+        onPress={handleSave}
+        disabled={loading}
+      >
+        <Text style={styles.saveButtonText}>
+          {loading ? 'Creating...' : 'Create Task'}
+        </Text>
+      </TouchableOpacity>
+    </BaseModal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  container: {
-    backgroundColor: Colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '85%',
-    padding: 20,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: Colors.text,
-  },
-  closeBtn: {
-    padding: 4,
-  },
   label: {
     fontSize: 13,
     fontWeight: '700',
+    color: Colors.text,
+    marginBottom: 4,
+    marginTop: 2,
+  },
+  sublabel: {
+    fontSize: 11,
     color: Colors.textSecondary,
-    marginBottom: 6,
-    marginTop: 10,
+    marginBottom: 4,
   },
   input: {
-    backgroundColor: Colors.surfaceSoft,
-    borderRadius: 12,
-    padding: 14,
-    color: Colors.text,
-    fontSize: 15,
     borderWidth: 1,
     borderColor: Colors.border,
+    borderRadius: 10,
+    padding: 10,
+    fontSize: 15,
+    color: Colors.text,
+    backgroundColor: Colors.background,
+    marginBottom: 10,
   },
-  freqOptions: {
+  chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginVertical: 6,
+    gap: 6,
+    marginBottom: 10,
   },
-  freqChip: {
+  chip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
     backgroundColor: Colors.surfaceSoft,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  freqChipActive: {
+  chipSelected: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
-  freqChipText: {
+  chipText: {
     fontSize: 12,
-    color: Colors.textSecondary,
     fontWeight: '600',
+    color: Colors.textSecondary,
   },
-  freqChipTextActive: {
+  chipTextSelected: {
     color: '#FFF',
     fontWeight: '700',
   },
-  submitBtn: {
+  saveButton: {
     backgroundColor: Colors.primary,
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: 12,
+    padding: 14,
     alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 10,
+    marginTop: 6,
   },
-  submitBtnDisabled: {
-    opacity: 0.6,
-  },
-  submitBtnText: {
+  saveButtonText: {
     color: '#FFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
+  },
+  disabled: {
+    opacity: 0.6,
   },
 });

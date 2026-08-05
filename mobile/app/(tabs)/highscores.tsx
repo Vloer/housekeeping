@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,10 +39,10 @@ export default function HighscoresScreen() {
     }
   };
 
-  const handleUserPress = (entry: HighscoreEntry) => {
+  const handleUserPress = useCallback((entry: HighscoreEntry) => {
     setSelectedUser(entry);
     setStatsModalVisible(true);
-  };
+  }, []);
 
   const handleLeave = () => {
     Alert.alert(
@@ -68,6 +68,19 @@ export default function HighscoresScreen() {
   const secondPlace = displayScores.find((s) => s.rank === 2);
   const thirdPlace = displayScores.find((s) => s.rank === 3);
   const remainingScores = displayScores.filter((s) => s.rank > 3);
+
+  const renderLeaderboardItem = useCallback(
+    ({ item }: { item: HighscoreEntry }) => (
+      <LeaderboardItem
+        entry={item}
+        isCurrentUser={item.user_uuid === userUuid}
+        onPress={handleUserPress}
+      />
+    ),
+    [userUuid, handleUserPress]
+  );
+
+  const keyExtractor = useCallback((item: HighscoreEntry, idx: number) => `${item.user_uuid}-${idx}`, []);
 
   const renderPodium = () => {
     if (!firstPlace) return null;
@@ -177,16 +190,13 @@ export default function HighscoresScreen() {
       ) : (
         <FlatList
           data={displayScores.length <= 3 ? displayScores : remainingScores}
-          keyExtractor={(item, idx) => `${item.user_uuid}-${idx}`}
+          keyExtractor={keyExtractor}
           contentContainerStyle={styles.list}
           ListHeaderComponent={displayScores.length > 0 ? renderPodium() : null}
-          renderItem={({ item }) => (
-            <LeaderboardItem
-              entry={item}
-              isCurrentUser={item.user_uuid === userUuid}
-              onPress={handleUserPress}
-            />
-          )}
+          renderItem={renderLeaderboardItem}
+          removeClippedSubviews
+          maxToRenderPerBatch={10}
+          windowSize={5}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>No rankings recorded yet.</Text>
