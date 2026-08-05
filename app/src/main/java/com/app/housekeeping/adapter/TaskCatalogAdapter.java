@@ -27,6 +27,7 @@ public class TaskCatalogAdapter extends RecyclerView.Adapter<TaskCatalogAdapter.
         void onTaskDeactivated(CatalogTask task);
         void onEditTask(CatalogTask task);
         void onEditLastDoneDate(CatalogTask task);
+        void onDeleteTask(CatalogTask task);
     }
 
     public TaskCatalogAdapter(List<CatalogTask> initialTasks, OnTaskToggleListener listener) {
@@ -68,14 +69,16 @@ public class TaskCatalogAdapter extends RecyclerView.Adapter<TaskCatalogAdapter.
 
             holder.layoutDates.setVisibility(View.VISIBLE);
 
-            String lastDoneStr = task.getLastDoneDate() != null && !task.getLastDoneDate().isEmpty()
+            String notSetText = holder.itemView.getContext().getString(R.string.not_set);
+
+            String lastDoneStr = task.getLastDoneDate() != null && !task.getLastDoneDate().isEmpty() && !"null".equalsIgnoreCase(task.getLastDoneDate())
                     ? task.getLastDoneDate()
-                    : holder.itemView.getContext().getString(R.string.never);
+                    : notSetText;
             holder.textLastDone.setText(holder.itemView.getContext().getString(R.string.last_done_label, lastDoneStr));
 
-            String dueByStr = task.getDueDate() != null && !task.getDueDate().isEmpty()
+            String dueByStr = task.getDueDate() != null && !task.getDueDate().isEmpty() && !"null".equalsIgnoreCase(task.getDueDate())
                     ? task.getDueDate()
-                    : holder.itemView.getContext().getString(R.string.not_set);
+                    : notSetText;
             holder.textDueBy.setText(holder.itemView.getContext().getString(R.string.due_by_label, dueByStr));
 
             holder.textLastDone.setOnClickListener(v -> {
@@ -101,7 +104,7 @@ public class TaskCatalogAdapter extends RecyclerView.Adapter<TaskCatalogAdapter.
 
         holder.itemView.setOnLongClickListener(v -> {
             if (listener != null) {
-                listener.onEditTask(task);
+                listener.onDeleteTask(task);
             }
             return true;
         });

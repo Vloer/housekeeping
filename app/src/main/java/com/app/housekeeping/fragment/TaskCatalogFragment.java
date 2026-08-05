@@ -196,4 +196,44 @@ public class TaskCatalogFragment extends Fragment implements TaskCatalogAdapter.
         dialog.setTitle(getString(R.string.edit_last_done_date));
         dialog.show();
     }
+
+    @Override
+    public void onDeleteTask(CatalogTask task) {
+        String[] options = new String[]{
+                getString(R.string.edit_task),
+                getString(R.string.delete_task_title)
+        };
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle(task.getName())
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        onEditTask(task);
+                    } else if (which == 1) {
+                        confirmDeleteTask(task);
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void confirmDeleteTask(CatalogTask task) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.delete_task_title)
+                .setMessage(getString(R.string.confirm_delete_task, task.getName()))
+                .setPositiveButton(R.string.delete, (dialog, which) -> {
+                    HouseholdManager hm = HouseholdManager.getInstance(requireContext());
+                    if (repository != null) {
+                        repository.deleteTaskNetwork(hm.getHouseholdId(), task.getId(), result -> {
+                            if (getActivity() instanceof com.app.housekeeping.MainActivity) {
+                                ((com.app.housekeeping.MainActivity) getActivity()).refreshFragments();
+                            } else {
+                                refreshTasks();
+                            }
+                        });
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
 }

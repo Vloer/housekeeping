@@ -203,4 +203,44 @@ public class ActiveTasksFragment extends Fragment implements ActiveTaskAdapter.O
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
+
+    @Override
+    public void onDeleteTask(ActiveTask task) {
+        String[] options = new String[]{
+                getString(R.string.edit_task),
+                getString(R.string.delete_task_title)
+        };
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle(task.getTaskName())
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        onEditTask(task);
+                    } else if (which == 1) {
+                        confirmDeleteTask(task);
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void confirmDeleteTask(ActiveTask task) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.delete_task_title)
+                .setMessage(getString(R.string.confirm_delete_task, task.getTaskName()))
+                .setPositiveButton(R.string.delete, (dialog, which) -> {
+                    HouseholdManager hm = HouseholdManager.getInstance(requireContext());
+                    if (repository != null) {
+                        repository.deleteTaskNetwork(hm.getHouseholdId(), task.getCatalogTaskId(), result -> {
+                            if (getActivity() instanceof MainActivity) {
+                                ((MainActivity) getActivity()).refreshFragments();
+                            } else {
+                                refreshTasks();
+                            }
+                        });
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
 }

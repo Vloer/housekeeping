@@ -296,7 +296,12 @@ public class MainActivity extends AppCompatActivity {
                         Frequency selectedFreq = Frequency.values()[position];
                         
                         HouseholdManager hm = HouseholdManager.getInstance(this);
-                        repository.addCustomTaskNetwork(hm.getHouseholdId(), taskName, selectedFreq.days, result -> refreshFragments());
+                        repository.addCustomTaskNetwork(hm.getHouseholdId(), taskName, selectedFreq.days, result -> {
+                            refreshFragments();
+                            if (viewPager != null) {
+                                viewPager.setCurrentItem(0, true);
+                            }
+                        });
                     }
                 })
                 .setNegativeButton(R.string.cancel, null)

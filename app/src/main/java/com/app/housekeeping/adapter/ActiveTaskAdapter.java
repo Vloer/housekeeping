@@ -26,6 +26,7 @@ public class ActiveTaskAdapter extends RecyclerView.Adapter<ActiveTaskAdapter.Vi
         void onTaskDone(ActiveTask task);
         void onEditLastDoneDate(ActiveTask task);
         void onEditTask(ActiveTask task);
+        void onDeleteTask(ActiveTask task);
     }
 
     public ActiveTaskAdapter(List<ActiveTask> initialTasks, OnTaskActionListener listener) {
@@ -72,12 +73,14 @@ public class ActiveTaskAdapter extends RecyclerView.Adapter<ActiveTaskAdapter.Vi
         }
         holder.textDueStatus.setText(dueStatus);
 
-        String lastDoneStr = task.getLastDoneDate() != null && !task.getLastDoneDate().isEmpty() 
-                ? task.getLastDoneDate() : "Never";
+        String notSetText = holder.itemView.getContext().getString(R.string.not_set);
+
+        String lastDoneStr = task.getLastDoneDate() != null && !task.getLastDoneDate().isEmpty() && !"null".equalsIgnoreCase(task.getLastDoneDate())
+                ? task.getLastDoneDate() : notSetText;
         holder.textLastDone.setText(holder.itemView.getContext().getString(R.string.last_done_label, lastDoneStr));
 
-        String dueByStr = task.getDueDate() != null && !task.getDueDate().isEmpty() 
-                ? task.getDueDate() : "Not set";
+        String dueByStr = task.getDueDate() != null && !task.getDueDate().isEmpty() && !"null".equalsIgnoreCase(task.getDueDate())
+                ? task.getDueDate() : notSetText;
         holder.textDueBy.setText(holder.itemView.getContext().getString(R.string.due_by_label, dueByStr));
         
         int color = ColorUtil.getUrgencyColor(daysOverdue, task.getFrequencyDays());
@@ -97,7 +100,7 @@ public class ActiveTaskAdapter extends RecyclerView.Adapter<ActiveTaskAdapter.Vi
 
         holder.itemView.setOnLongClickListener(v -> {
             if (listener != null) {
-                listener.onEditTask(task);
+                listener.onDeleteTask(task);
             }
             return true;
         });

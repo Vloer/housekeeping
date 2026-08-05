@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Build;
 
 import com.app.housekeeping.database.TaskRepository;
+import com.app.housekeeping.household.HouseholdManager;
 import com.app.housekeeping.model.ActiveTask;
 
 import java.util.ArrayList;
@@ -22,35 +23,53 @@ public class DailyAlarmReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         NotificationHelper.createNotificationChannel(context);
         
+        HouseholdManager hm = HouseholdManager.getInstance(context);
         TaskRepository repository = TaskRepository.getInstance(context);
-        List<ActiveTask> tasksDue = repository.getTasksDueForNotification();
-        
-        if (tasksDue != null && !tasksDue.isEmpty()) {
-            List<String> taskNames = new ArrayList<>();
-            List<Integer> taskIds = new ArrayList<>();
-            
-            for (ActiveTask task : tasksDue) {
-                taskNames.add(task.getTaskName());
-                taskIds.add(task.getId());
-            }
-            
-            NotificationHelper.showTaskNotification(context, taskNames);
-            repository.markNotified(taskIds);
+
+        if (hm.hasHousehold()) {
+            repository.getActiveTasksNetwork(hm.getHouseholdId(), new TaskRepository.RepositoryCallback<List<ActiveTask>>() {
+                @Override
+                public void onSuccess(List<ActiveTask> tasks) {
+                    checkAndNotify(context, repository, tasks);
+                    scheduleDailyAlarm(context);
+                }
+
+                @Override
+                public void onError(String error) {
+                    List<ActiveTask> tasks = repository.getTasksDueForNotification();
+                    checkAndNotify(context, repository, tasks);
+                    scheduleDailyAlarm(context);
+                }
+            });
+        } else {
+            List<ActiveTask> tasks = repository.getTasksDueForNotification();
+            checkAndNotify(context, repository, tasks);
+            scheduleDailyAlarm(context);
         }
-        
-        // Reschedule for tomorrow
-        scheduleDailyAlarm(context);
+    }
+
+    private void checkAndNotify(Context context, TaskRepository repository, List<ActiveTask> tasks) {
+        if (tasks == null || tasks.isEmpty()) return;
+
+        List<String> dueTaskNames = new ArrayList<>();
+        List<Integer> dueTaskIds = new ArrayList<>();
+
+        for (ActiveTask task : tasks) {
+            if (task.getDaysOverdue() >= 0) {
+                dueTaskNames.add(task.getTaskName());
+                dueTaskIds.add(task.getId());
+            }
+        }
+
+        if (!dueTaskNames.isEmpty()) {
+            NotificationHelper.showTaskNotification(context, dueTaskNames);
+            repository.markNotified(dueTaskIds);
+        }
     }
 
     public static void scheduleDailyAlarm(Context context) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (alarmManager == null) return;
-        
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (!alarmManager.canScheduleExactAlarms()) {
-                return; // Cannot schedule exact alarms without permission
-            }
-        }
 
         Intent intent = new Intent(context, DailyAlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
@@ -70,10 +89,18 @@ public class DailyAlarmReceiver extends BroadcastReceiver {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
         }
 
-        alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.getTimeInMillis(),
-                pendingIntent
-        );
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && alarmManager.canScheduleExactAlarms()) {
+            alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.getTimeInMillis(),
+                    pendingIntent
+            );
+        } else {
+            alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.getTimeInMillis(),
+                    pendingIntent
+            );
+        }
     }
 }

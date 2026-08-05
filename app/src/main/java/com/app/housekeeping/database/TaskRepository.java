@@ -61,9 +61,13 @@ public class TaskRepository {
                         task.setDefaultFrequencyDays(obj.getInt("default_frequency_days"));
                         task.setActive(obj.getBoolean("is_active"));
                         task.setFrequencyDays(obj.getInt("frequency_days"));
-                        task.setActiveTaskId(obj.optInt("active_id", -1));
-                        task.setLastDoneDate(obj.optString("last_done_date", null));
-                        task.setDueDate(obj.optString("due_date", null));
+                        String lastDone = obj.isNull("last_done_date") ? null : obj.optString("last_done_date", null);
+                        if ("null".equalsIgnoreCase(lastDone)) lastDone = null;
+                        task.setLastDoneDate(lastDone);
+
+                        String dueDate = obj.isNull("due_date") ? null : obj.optString("due_date", null);
+                        if ("null".equalsIgnoreCase(dueDate)) dueDate = null;
+                        task.setDueDate(dueDate);
                         tasks.add(task);
                     }
                     callback.onSuccess(tasks);
@@ -404,6 +408,29 @@ public class TaskRepository {
         }
     }
 
+    public void deleteTaskNetwork(int householdId, int catalogTaskId, RepositoryCallback<Void> callback) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put("catalog_task_id", catalogTaskId);
+            ApiClient.post("/households/" + householdId + "/delete-task", body, new ApiClient.ApiCallback<JSONObject>() {
+                @Override
+                public void onSuccess(JSONObject result) {
+                    deleteTask(catalogTaskId);
+                    callback.onSuccess(null);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    deleteTask(catalogTaskId);
+                    callback.onSuccess(null);
+                }
+            });
+        } catch (Exception e) {
+            deleteTask(catalogTaskId);
+            callback.onSuccess(null);
+        }
+    }
+
     public void importCsvNetwork(int householdId, String csvContent, RepositoryCallback<Void> callback) {
         try {
             JSONObject body = new JSONObject();
@@ -565,13 +592,31 @@ public class TaskRepository {
         }
     }
 
+    public void deleteTask(int catalogTaskId) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            db.delete("active_tasks", "catalog_task_id = ?", new String[]{String.valueOf(catalogTaskId)});
+            db.delete("task_catalog", "id = ?", new String[]{String.valueOf(catalogTaskId)});
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
     public void addCustomTask(String name, int defaultFrequencyDays) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("name", name);
         cv.put("is_custom", 1);
         cv.put("default_frequency_days", defaultFrequencyDays);
-        db.insert("task_catalog", null, cv);
+        long catalogTaskId = db.insert("task_catalog", null, cv);
+        if (catalogTaskId > 0) {
+            ContentValues acv = new ContentValues();
+            acv.put("catalog_task_id", catalogTaskId);
+            acv.put("frequency_days", defaultFrequencyDays);
+            db.insert("active_tasks", null, acv);
+        }
     }
 
     public List<ActiveTask> getTasksDueForNotification() {
@@ -580,11 +625,11 @@ public class TaskRepository {
         
         String query = "SELECT a.id, a.catalog_task_id, c.name, a.frequency_days, a.last_done_date, " +
                 "date(a.last_done_date, '+' || a.frequency_days || ' days') AS due_date, " +
-                "CAST(julianday('now', 'localtime') - julianday(date(a.last_done_date, '+' || a.frequency_days || ' days')) AS INTEGER) AS days_overdue " +
+                "CASE WHEN a.last_done_date IS NULL THEN a.frequency_days ELSE CAST(julianday('now', 'localtime') - julianday(date(a.last_done_date, '+' || a.frequency_days || ' days')) AS INTEGER) END AS days_overdue " +
                 "FROM active_tasks a " +
                 "JOIN task_catalog c ON a.catalog_task_id = c.id " +
                 "WHERE a.notified_this_cycle = 0 " +
-                "AND (a.last_done_date IS NULL OR CAST(julianday('now', 'localtime') - julianday(date(a.last_done_date, '+' || a.frequency_days || ' days')) AS INTEGER) >= 0)";
+                "AND (a.last_done_date IS NULL OR (julianday('now', 'localtime') - julianday(date(a.last_done_date, '+' || a.frequency_days || ' days'))) >= 0)";
                 
         try (Cursor cursor = db.rawQuery(query, null)) {
             if (cursor.moveToFirst()) {

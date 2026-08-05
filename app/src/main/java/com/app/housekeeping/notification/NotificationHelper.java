@@ -22,7 +22,7 @@ public class NotificationHelper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Daily Task Reminders";
             String description = "Notifications for daily housekeeping tasks";
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            int importance = NotificationManager.IMPORTANCE_HIGH;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
 
@@ -53,7 +53,7 @@ public class NotificationHelper {
                 .setSmallIcon(android.R.drawable.ic_menu_agenda)
                 .setContentTitle("Housekeeping Tasks")
                 .setContentText(contentText)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);
 

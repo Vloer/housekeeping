@@ -7,7 +7,8 @@ from schemas import (
     DeactivateTaskRequest,
     CustomTaskRequest,
     UpdateTaskRequest,
-    ImportCsvRequest
+    ImportCsvRequest,
+    DeleteTaskRequest
 )
 
 router = APIRouter(prefix="/api/households", tags=["Tasks"])
@@ -145,8 +146,13 @@ def add_custom_task(household_id: int, req: CustomTaskRequest, db: sqlite3.Conne
         "INSERT INTO task_catalog (household_id, name, is_custom, default_frequency_days) VALUES (?, ?, 1, ?)",
         (household_id, req.name, req.default_frequency_days)
     )
+    catalog_task_id = cursor.lastrowid
+    cursor.execute(
+        "INSERT INTO active_tasks (household_id, catalog_task_id, frequency_days, notified_this_cycle) VALUES (?, ?, ?, 0)",
+        (household_id, catalog_task_id, req.default_frequency_days)
+    )
     db.commit()
-    return {"status": "success", "catalog_task_id": cursor.lastrowid}
+    return {"status": "success", "catalog_task_id": catalog_task_id}
 
 @router.post("/{household_id}/update-task")
 def update_task(household_id: int, req: UpdateTaskRequest, db: sqlite3.Connection = Depends(get_db)):
@@ -159,6 +165,15 @@ def update_task(household_id: int, req: UpdateTaskRequest, db: sqlite3.Connectio
         "UPDATE active_tasks SET frequency_days = ? WHERE catalog_task_id = ? AND household_id = ?",
         (req.frequency_days, req.catalog_task_id, household_id)
     )
+    db.commit()
+    return {"status": "success"}
+
+@router.post("/{household_id}/delete-task")
+def delete_task(household_id: int, req: DeleteTaskRequest, db: sqlite3.Connection = Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM active_tasks WHERE household_id = ? AND catalog_task_id = ?", (household_id, req.catalog_task_id))
+    cursor.execute("DELETE FROM task_completions WHERE household_id = ? AND catalog_task_id = ?", (household_id, req.catalog_task_id))
+    cursor.execute("DELETE FROM task_catalog WHERE id = ? AND household_id = ?", (req.catalog_task_id, household_id))
     db.commit()
     return {"status": "success"}
 

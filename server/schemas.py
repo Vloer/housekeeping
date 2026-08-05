@@ -38,3 +38,6 @@ class UpdateTaskRequest(BaseModel):
 
 class ImportCsvRequest(BaseModel):
     csv_content: str
+
+class DeleteTaskRequest(BaseModel):
+    catalog_task_id: int

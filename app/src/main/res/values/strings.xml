@@ -33,7 +33,13 @@
     <string name="last_done_label">Last Done: %s ✏️</string>
     <string name="due_by_label">Due By: %s</string>
     <string name="never">Never</string>
-    <string name="not_set">Not set</string>
+    <string name="not_set">Not set!</string>
+
+    <!-- Delete Task -->
+    <string name="delete_task_title">Delete Task</string>
+    <string name="confirm_delete_task">Are you sure you want to delete \"%s\" from this household?</string>
+    <string name="delete">Delete</string>
+    <string name="task_options">Task Options</string>
 
     <!-- Household & Navigation -->
     <string name="title_household_housekeeping">%s housekeeping</string>
