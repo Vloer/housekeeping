@@ -82,6 +82,10 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     initStorage();
   }, []);
 
+  useEffect(() => {
+    api.setClientContext(userUuid, userName, household?.household_id, household?.name);
+  }, [userUuid, userName, household?.household_id, household?.name]);
+
   const refreshData = useCallback(async (): Promise<void> => {
     if (!household?.household_id) return;
 

@@ -219,7 +219,6 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               value={selectedDate}
               mode="date"
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={handleDateChange}
               onValueChange={handleDateChange}
               onDismiss={() => setShowDatePicker(false)}
               maximumDate={new Date()}

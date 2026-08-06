@@ -4,16 +4,10 @@ import { CatalogTask, ActiveTask, Household, HighscoreEntry, UserTaskStat } from
 
 // Determine Base URL and normalize so /api/ endpoints join cleanly
 const getBaseUrl = (): string => {
-  let url = process.env.EXPO_PUBLIC_API_URL || Constants.expoConfig?.extra?.apiUrl;
+  let url = process.env.API_URL || Constants.expoConfig?.extra?.apiUrl;
   
   if (!url) {
-    const hostUri = Constants.expoConfig?.hostUri;
-    if (hostUri) {
-      const ip = hostUri.split(':')[0];
-      url = `http://${ip}:8000`;
-    } else {
-      url = 'http://10.0.2.2:8000';
-    }
+    url = 'http://62.238.4.160:8000/api';
   }
 
   // Strip trailing slashes
@@ -28,7 +22,7 @@ const getBaseUrl = (): string => {
 };
 
 const getAuthToken = (): string => {
-  return process.env.EXPO_PUBLIC_AUTH_TOKEN || process.env.AUTH_TOKEN || 'hk_secret_token_2026';
+  return process.env.AUTH_TOKEN || process.env.AUTH_TOKEN || 'hk_secret_token_2026';
 };
 
 const BASE_URL = getBaseUrl();
@@ -67,6 +61,13 @@ export const setBaseUrl = (url: string) => {
   }
   apiClient.defaults.baseURL = normalized;
   console.log(`[API Client] Base URL updated to: ${normalized}`);
+};
+
+export const setClientContext = (userUuid?: string, userName?: string, householdId?: number, householdName?: string) => {
+  if (userUuid) apiClient.defaults.headers.common['X-User-Uuid'] = userUuid;
+  if (userName) apiClient.defaults.headers.common['X-User-Name'] = userName;
+  if (householdId) apiClient.defaults.headers.common['X-Household-Id'] = householdId.toString();
+  if (householdName) apiClient.defaults.headers.common['X-Household-Name'] = householdName;
 };
 
 // Household APIs

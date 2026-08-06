@@ -16,6 +16,7 @@
     },
     "android": {
       "package": "com.app.housekeeping",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png"

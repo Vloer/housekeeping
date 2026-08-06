@@ -8,6 +8,7 @@ services:
       - "8000:8000"
     environment:
       - API_AUTH_TOKEN=${API_AUTH_TOKEN}
+      - TZ=${TZ:-Etc/GMT-1}
     volumes:
       # Mount local directory to persist SQLite database outside container
       - .:/app
@@ -23,4 +24,5 @@ services:
       - ./users.yml:/data/users.yml:ro
     environment:
       - DOZZLE_AUTH_PROVIDER=${DOZZLE_AUTH_PROVIDER:-simple}
+      - TZ=${TZ:-Etc/GMT-1}
     restart: always
