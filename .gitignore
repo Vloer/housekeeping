@@ -57,9 +57,10 @@ server/README.md
 # Agents
 .agents
 
-# Environment variables
+# Environment variables & secrets
 .env
 *.env
+users.yml
 
 # Database
 *.db
