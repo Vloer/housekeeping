@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHousehold } from '../../src/context/HouseholdContext';
 import { Colors } from '../../src/theme/colors';
+import i18n, { t } from '../../src/i18n';
 
 export default function TabLayout() {
   const router = useRouter();
@@ -16,12 +17,12 @@ export default function TabLayout() {
 
   const handleSwitchHousehold = () => {
     Alert.alert(
-      'Switch Household',
-      `Currently connected to "${household?.name || 'Household'}". Would you like to switch to a different household?`,
+      i18n.tabs.switchHouseholdTitle,
+      t(i18n.tabs.switchHouseholdMessage, { name: household?.name || i18n.highscoresScreen.householdBannerDefault }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: i18n.onboarding.cancel, style: 'cancel' },
         {
-          text: 'Switch Household',
+          text: i18n.tabs.switchHouseholdBtn,
           onPress: async () => {
             await leaveHousehold();
             router.replace('/onboarding');
@@ -55,7 +56,7 @@ export default function TabLayout() {
           >
             <Ionicons name="home-outline" size={15} color={Colors.primary} />
             <Text style={styles.switchButtonText} numberOfLines={1}>
-              {household?.name || 'Switch'}
+              {household?.name || i18n.tabs.switchDefault}
             </Text>
             <Ionicons name="swap-horizontal" size={15} color={Colors.textSecondary} />
           </TouchableOpacity>
@@ -83,7 +84,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Active Tasks',
+          title: i18n.tabs.activeTasks,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'checkbox' : 'checkbox-outline'} size={size} color={color} />
           ),
@@ -92,7 +93,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="catalog"
         options={{
-          title: 'Task Catalog',
+          title: i18n.tabs.taskCatalog,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'list' : 'list-outline'} size={size} color={color} />
           ),
@@ -101,7 +102,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="highscores"
         options={{
-          title: 'Leaderboard',
+          title: i18n.tabs.leaderboard,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'trophy' : 'trophy-outline'} size={size} color={color} />
           ),

@@ -8,6 +8,7 @@ import { UserStatsModal } from '../../src/components/UserStatsModal';
 import { HighscoreEntry } from '../../src/types';
 import { getGlobalHighscores } from '../../src/services/api';
 import { Colors } from '../../src/theme/colors';
+import i18n from '../../src/i18n';
 
 type TabMode = 'HOUSEHOLD' | 'GLOBAL';
 
@@ -46,12 +47,12 @@ export default function HighscoresScreen() {
 
   const handleLeave = () => {
     Alert.alert(
-      'Leave Household',
-      'Are you sure you want to disconnect from this household?',
+      i18n.highscoresScreen.leaveTitle,
+      i18n.highscoresScreen.leaveMessage,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: i18n.onboarding.cancel, style: 'cancel' },
         {
-          text: 'Leave',
+          text: i18n.highscoresScreen.leaveConfirm,
           style: 'destructive',
           onPress: async () => {
             await leaveHousehold();
@@ -88,7 +89,7 @@ export default function HighscoresScreen() {
     return (
       <View style={styles.podiumCard}>
         <Text style={styles.podiumTitle}>
-          {tabMode === 'GLOBAL' ? '🌍 Global Leaderboard' : '🏆 Household Leaderboard'}
+          {tabMode === 'GLOBAL' ? i18n.highscoresScreen.podiumGlobalTitle : i18n.highscoresScreen.podiumHouseholdTitle}
         </Text>
         <View style={styles.podiumRow}>
           {/* 2nd Place */}
@@ -102,7 +103,7 @@ export default function HighscoresScreen() {
                   </View>
                 </View>
                 <Text style={styles.podiumName} numberOfLines={1}>{secondPlace.username}</Text>
-                <Text style={styles.podiumPts}>{secondPlace.points} pts</Text>
+                <Text style={styles.podiumPts}>{secondPlace.points} {i18n.highscoresScreen.pts}</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.podiumEmpty} />
@@ -121,7 +122,7 @@ export default function HighscoresScreen() {
               <Text style={[styles.podiumName, styles.podiumNameFirst]} numberOfLines={1}>
                 👑 {firstPlace.username}
               </Text>
-              <Text style={styles.podiumPtsFirst}>{firstPlace.points} pts</Text>
+              <Text style={styles.podiumPtsFirst}>{firstPlace.points} {i18n.highscoresScreen.pts}</Text>
             </TouchableOpacity>
           </View>
 
@@ -136,7 +137,7 @@ export default function HighscoresScreen() {
                   </View>
                 </View>
                 <Text style={styles.podiumName} numberOfLines={1}>{thirdPlace.username}</Text>
-                <Text style={styles.podiumPts}>{thirdPlace.points} pts</Text>
+                <Text style={styles.podiumPts}>{thirdPlace.points} {i18n.highscoresScreen.pts}</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.podiumEmpty} />
@@ -152,9 +153,9 @@ export default function HighscoresScreen() {
       {/* Household Info Banner */}
       <View style={styles.banner}>
         <View style={styles.bannerInfo}>
-          <Text style={styles.householdName}>{household?.name || 'Household'}</Text>
+          <Text style={styles.householdName}>{household?.name || i18n.highscoresScreen.householdBannerDefault}</Text>
           <View style={styles.codeRow}>
-            <Text style={styles.codeLabel}>JOIN CODE:</Text>
+            <Text style={styles.codeLabel}>{i18n.highscoresScreen.joinCodeLabel}</Text>
             <Text style={styles.codeValue}>{household?.join_code}</Text>
           </View>
         </View>
@@ -171,7 +172,7 @@ export default function HighscoresScreen() {
         >
           <Ionicons name="people" size={16} color={tabMode === 'HOUSEHOLD' ? '#FFF' : Colors.textSecondary} />
           <Text style={[styles.segmentText, tabMode === 'HOUSEHOLD' && styles.segmentTextActive]}>
-            Household
+            {i18n.highscoresScreen.tabHousehold}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -180,7 +181,7 @@ export default function HighscoresScreen() {
         >
           <Ionicons name="globe" size={16} color={tabMode === 'GLOBAL' ? '#FFF' : Colors.textSecondary} />
           <Text style={[styles.segmentText, tabMode === 'GLOBAL' && styles.segmentTextActive]}>
-            Global
+            {i18n.highscoresScreen.tabGlobal}
           </Text>
         </TouchableOpacity>
       </View>
@@ -199,7 +200,7 @@ export default function HighscoresScreen() {
           windowSize={5}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No rankings recorded yet.</Text>
+              <Text style={styles.emptyText}>{i18n.highscoresScreen.emptyText}</Text>
             </View>
           }
         />

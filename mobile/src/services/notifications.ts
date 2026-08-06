@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { ActiveTask } from '../types';
+import i18n, { t } from '../i18n';
 
 // Check if running inside standard Expo Go app
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
@@ -56,14 +57,14 @@ export const scheduleDailyTaskReminder = async (activeTasks: ActiveTask[]) => {
 
     let body = '';
     if (overdueTasks.length > 0) {
-      body = `You have ${overdueTasks.length} overdue housekeeping task(s)!`;
+      body = t(i18n.notifications.overdueBody, { count: overdueTasks.length });
     } else {
-      body = `You have ${dueTodayTasks.length} task(s) due today.`;
+      body = t(i18n.notifications.dueTodayBody, { count: dueTodayTasks.length });
     }
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '🏠 Housekeeping Reminder',
+        title: i18n.notifications.reminderTitle,
         body,
         sound: true,
       },

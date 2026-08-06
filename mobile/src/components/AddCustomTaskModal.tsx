@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'reac
 import { BaseModal } from './common/BaseModal';
 import { Colors } from '../theme/colors';
 import { FREQUENCY_PRESETS } from '../types';
+import i18n from '../i18n';
 
 interface AddCustomTaskModalProps {
   visible: boolean;
@@ -19,7 +20,7 @@ export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible,
   const handleSave = async () => {
     const trimmedName = name.trim();
     if (!trimmedName) {
-      Alert.alert('Validation Error', 'Please enter a task name.');
+      Alert.alert(i18n.onboarding.validationError, i18n.modals.addCustomTask.pleaseEnterTaskName);
       return;
     }
 
@@ -27,7 +28,7 @@ export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible,
     if (customDaysInput) {
       const parsed = parseInt(customDaysInput, 10);
       if (isNaN(parsed) || parsed <= 0) {
-        Alert.alert('Validation Error', 'Please enter a valid number of days.');
+        Alert.alert(i18n.onboarding.validationError, i18n.modals.addCustomTask.pleaseEnterValidDays);
         return;
       }
       finalFreq = parsed;
@@ -41,24 +42,24 @@ export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible,
       setFrequencyDays(30);
       onClose();
     } catch (err) {
-      Alert.alert('Error', 'Failed to create task. Please try again.');
+      Alert.alert(i18n.onboarding.errorTitle, i18n.modals.addCustomTask.failedToCreateTask);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <BaseModal visible={visible} title="Add Custom Task" onClose={onClose}>
-      <Text style={styles.label}>Task Name</Text>
+    <BaseModal visible={visible} title={i18n.modals.addCustomTask.title} onClose={onClose}>
+      <Text style={styles.label}>{i18n.modals.addCustomTask.taskNameLabel}</Text>
       <TextInput
         style={styles.input}
-        placeholder="e.g. Clean air filters"
+        placeholder={i18n.modals.addCustomTask.taskNamePlaceholder}
         value={name}
         onChangeText={setName}
         autoFocus
       />
 
-      <Text style={styles.label}>Repeat Frequency</Text>
+      <Text style={styles.label}>{i18n.modals.addCustomTask.repeatFrequencyLabel}</Text>
       <View style={styles.chipRow}>
         {FREQUENCY_PRESETS.map((option) => {
           const isSelected = frequencyDays === option.days && !customDaysInput;
@@ -79,10 +80,10 @@ export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible,
         })}
       </View>
 
-      <Text style={styles.sublabel}>Or enter custom number of days:</Text>
+      <Text style={styles.sublabel}>{i18n.modals.addCustomTask.customDaysLabel}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Custom days (e.g. 45)"
+        placeholder={i18n.modals.addCustomTask.customDaysPlaceholder}
         keyboardType="numeric"
         value={customDaysInput}
         onChangeText={setCustomDaysInput}
@@ -94,7 +95,7 @@ export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible,
         disabled={loading}
       >
         <Text style={styles.saveButtonText}>
-          {loading ? 'Creating...' : 'Create Task'}
+          {loading ? i18n.modals.addCustomTask.creatingButton : i18n.modals.addCustomTask.createButton}
         </Text>
       </TouchableOpacity>
     </BaseModal>

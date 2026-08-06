@@ -1,3 +1,5 @@
+import i18n from '../i18n';
+
 export interface Household {
   household_id: number;
   name: string;
@@ -40,16 +42,15 @@ export interface UserTaskStat {
   total_points: number;
 }
 
-export type FrequencyType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'AS_NEEDED' | 'ALL';
-
 export const FREQUENCY_PRESETS = [
-  { label: 'Weekly', days: 7 },
-  { label: 'Biweekly', days: 14 },
-  { label: 'Monthly', days: 30 },
-  { label: 'Bimonthly', days: 60 },
-  { label: 'Quarterly', days: 90 },
-  { label: 'Half-Yearly', days: 180 },
-  { label: 'Yearly', days: 365 },
+  { label: i18n.frequencyPresets.weekly, days: 7 },
+  { label: i18n.frequencyPresets.biweekly, days: 14 },
+  { label: i18n.frequencyPresets.monthly, days: 30 },
+  { label: i18n.frequencyPresets.bimonthly, days: 60 },
+  { label: i18n.frequencyPresets.quarterly, days: 90 },
+  { label: i18n.frequencyPresets.halfYearly, days: 180 },
+  { label: i18n.frequencyPresets.yearly, days: 365 },
 ] as const;
 
 export type FrequencyPreset = typeof FREQUENCY_PRESETS[number];
+

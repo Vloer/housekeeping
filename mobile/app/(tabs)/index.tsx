@@ -7,6 +7,7 @@ import { TaskCard } from '../../src/components/TaskCard';
 import { ActiveTask } from '../../src/types';
 import { Colors } from '../../src/theme/colors';
 import { getTodayStr, getIn7DaysStr, getThisWeekBounds } from '../../src/utils/dateUtils';
+import i18n, { t } from '../../src/i18n';
 
 export default function ActiveTasksScreen() {
   const router = useRouter();
@@ -36,9 +37,12 @@ export default function ActiveTasksScreen() {
     async (taskId: number) => {
       try {
         const result = await markTaskDoneOptimistic(taskId);
-        Alert.alert('Task Done! 🎉', `Awesome work! You earned +${result.points} points for keeping your home up to date! 🌿`);
+        Alert.alert(
+          i18n.activeTasksScreen.taskDoneTitle,
+          t(i18n.activeTasksScreen.taskDoneMessage, { points: result.points })
+        );
       } catch (err) {
-        Alert.alert('Error', 'Failed to complete task. Please try again.');
+        Alert.alert(i18n.onboarding.errorTitle, i18n.activeTasksScreen.failedToComplete);
       }
     },
     [markTaskDoneOptimistic]
@@ -148,11 +152,13 @@ export default function ActiveTasksScreen() {
           <View style={styles.summaryCard}>
             <View style={styles.summaryHeader}>
               <View style={{ flex: 1, marginRight: 10 }}>
-                <Text style={styles.houseName}>{household?.name || 'My Home'}</Text>
+                <Text style={styles.houseName}>{household?.name || i18n.activeTasksScreen.defaultHomeName}</Text>
                 <Text style={styles.summaryStatusText}>
                   {thisWeekStats.overdueCount === 0
-                    ? `All ${thisWeekStats.totalCount} chores for this week are on schedule! 🌿`
-                    : `${thisWeekStats.overdueCount} chore${thisWeekStats.overdueCount > 1 ? 's' : ''} overdue this week`}
+                    ? t(i18n.activeTasksScreen.allChoresOnSchedule, { count: thisWeekStats.totalCount })
+                    : thisWeekStats.overdueCount === 1
+                    ? i18n.activeTasksScreen.choreOverdueSingle
+                    : t(i18n.activeTasksScreen.choresOverduePlural, { count: thisWeekStats.overdueCount })}
                 </Text>
               </View>
 
@@ -176,7 +182,7 @@ export default function ActiveTasksScreen() {
                     thisWeekStats.overdueCount > 0 && { color: Colors.danger },
                   ]}
                 >
-                  This Week
+                  {i18n.activeTasksScreen.thisWeek}
                 </Text>
               </View>
             </View>
@@ -203,9 +209,9 @@ export default function ActiveTasksScreen() {
             <View style={styles.emptyIconCircle}>
               <Ionicons name="sparkles" size={38} color={Colors.primary} />
             </View>
-            <Text style={styles.emptyTitle}>Your Home is Sparkling!</Text>
+            <Text style={styles.emptyTitle}>{i18n.activeTasksScreen.emptyTitle}</Text>
             <Text style={styles.emptySubtitle}>
-              No tasks due right now. Sit back and enjoy your clean home, or activate tasks from the catalog tab.
+              {i18n.activeTasksScreen.emptySubtitle}
             </Text>
           </View>
         }

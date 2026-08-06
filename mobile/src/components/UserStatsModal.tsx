@@ -4,6 +4,7 @@ import { BaseModal } from './common/BaseModal';
 import { HighscoreEntry, UserTaskStat } from '../types';
 import { getUserTaskStats } from '../services/api';
 import { Colors } from '../theme/colors';
+import i18n, { t, getTaskName } from '../i18n';
 
 interface UserStatsModalProps {
   visible: boolean;
@@ -45,12 +46,12 @@ export const UserStatsModal: React.FC<UserStatsModalProps> = ({
   return (
     <BaseModal
       visible={visible}
-      title={`${user.username}'s Achievements`}
+      title={t(i18n.modals.userStats.achievementsTitle, { username: user.username })}
       onClose={onClose}
     >
       <View style={styles.pointsBanner}>
-        <Text style={styles.pointsLabel}>TOTAL POINTS</Text>
-        <Text style={styles.pointsValue}>{user.points} pts</Text>
+        <Text style={styles.pointsLabel}>{i18n.modals.userStats.totalPointsLabel}</Text>
+        <Text style={styles.pointsValue}>{user.points} {i18n.modals.userStats.pts}</Text>
       </View>
 
       {loading ? (
@@ -63,9 +64,11 @@ export const UserStatsModal: React.FC<UserStatsModalProps> = ({
           renderItem={({ item }) => (
             <View style={styles.statItem}>
               <View style={styles.statMain}>
-                <Text style={styles.taskName}>{item.task_name}</Text>
+                <Text style={styles.taskName}>{getTaskName(item.task_name)}</Text>
                 <Text style={styles.completionsText}>
-                  Completed {item.completions_count} {item.completions_count === 1 ? 'time' : 'times'}
+                  {item.completions_count === 1
+                    ? i18n.modals.userStats.completedSingle
+                    : t(i18n.modals.userStats.completedPlural, { count: item.completions_count })}
                 </Text>
               </View>
               <View style={styles.statBadge}>
@@ -75,7 +78,7 @@ export const UserStatsModal: React.FC<UserStatsModalProps> = ({
           )}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No completed task statistics recorded yet.</Text>
+              <Text style={styles.emptyText}>{i18n.modals.userStats.emptyText}</Text>
             </View>
           }
         />

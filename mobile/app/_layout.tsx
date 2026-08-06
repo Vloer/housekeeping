@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { HouseholdProvider } from '../src/context/HouseholdContext';
 import { Colors } from '../src/theme/colors';
+import i18n from '../src/i18n';
 
 export default function RootLayout() {
   return (
@@ -26,7 +27,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="onboarding"
           options={{
-            headerTitle: 'Housekeeping',
+            headerTitle: i18n.appName,
             headerBackVisible: false,
             gestureEnabled: false,
           }}

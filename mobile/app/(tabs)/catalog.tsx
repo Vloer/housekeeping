@@ -7,6 +7,7 @@ import { AddCustomTaskModal } from '../../src/components/AddCustomTaskModal';
 import { EditTaskModal } from '../../src/components/EditTaskModal';
 import { CatalogTask } from '../../src/types';
 import { Colors } from '../../src/theme/colors';
+import i18n, { getTaskName } from '../../src/i18n';
 
 type FilterTab = 'ALL' | 'ACTIVE' | 'INACTIVE' | 'CUSTOM';
 
@@ -37,7 +38,9 @@ export default function CatalogScreen() {
 
   const filteredTasks = useMemo(() => {
     return catalogTasks.filter((task) => {
-      const matchesSearch = task.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const displayName = getTaskName(task.name);
+      const matchesSearch = displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.name.toLowerCase().includes(searchQuery.toLowerCase());
       if (!matchesSearch) return false;
 
       if (activeFilter === 'ACTIVE') return task.is_active;
@@ -129,14 +132,14 @@ export default function CatalogScreen() {
             <View style={styles.heroCard}>
               <View style={styles.heroHeader}>
                 <View>
-                  <Text style={styles.heroTitle}>Chore Catalog</Text>
+                  <Text style={styles.heroTitle}>{i18n.catalogScreen.heroTitle}</Text>
                   <Text style={styles.heroSubtitle}>
-                    Customize your household routine by activating or adding tasks.
+                    {i18n.catalogScreen.heroSubtitle}
                   </Text>
                 </View>
                 <View style={styles.heroBadge}>
                   <Text style={styles.heroBadgeNum}>{counts.active}</Text>
-                  <Text style={styles.heroBadgeLabel}>Active</Text>
+                  <Text style={styles.heroBadgeLabel}>{i18n.catalogScreen.heroActive}</Text>
                 </View>
               </View>
             </View>
@@ -146,7 +149,7 @@ export default function CatalogScreen() {
               <Ionicons name="search-outline" size={18} color={Colors.primary} style={styles.searchIcon} />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Search chores catalog..."
+                placeholder={i18n.catalogScreen.searchPlaceholder}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 placeholderTextColor={Colors.textMuted}
@@ -161,10 +164,10 @@ export default function CatalogScreen() {
             {/* Category Filter Chips */}
             <View style={styles.filterRow}>
               {[
-                { tab: 'ALL' as FilterTab, label: 'All', count: counts.total },
-                { tab: 'ACTIVE' as FilterTab, label: 'Active', count: counts.active },
-                { tab: 'INACTIVE' as FilterTab, label: 'Inactive', count: counts.inactive },
-                { tab: 'CUSTOM' as FilterTab, label: 'Custom', count: counts.custom },
+                { tab: 'ALL' as FilterTab, label: i18n.catalogScreen.filterAll, count: counts.total },
+                { tab: 'ACTIVE' as FilterTab, label: i18n.catalogScreen.filterActive, count: counts.active },
+                { tab: 'INACTIVE' as FilterTab, label: i18n.catalogScreen.filterInactive, count: counts.inactive },
+                { tab: 'CUSTOM' as FilterTab, label: i18n.catalogScreen.filterCustom, count: counts.custom },
               ].map(({ tab, label, count }) => {
                 const isSelected = activeFilter === tab;
                 return (
@@ -196,8 +199,8 @@ export default function CatalogScreen() {
             <View style={styles.emptyIconCircle}>
               <Ionicons name="journal-outline" size={32} color={Colors.primary} />
             </View>
-            <Text style={styles.emptyTitle}>No Chores Found</Text>
-            <Text style={styles.emptySubtitle}>Try clearing your search or selecting a different filter.</Text>
+            <Text style={styles.emptyTitle}>{i18n.catalogScreen.emptyTitle}</Text>
+            <Text style={styles.emptySubtitle}>{i18n.catalogScreen.emptySubtitle}</Text>
           </View>
         }
       />
@@ -207,11 +210,11 @@ export default function CatalogScreen() {
         style={styles.fab}
         onPress={() => setAddModalVisible(true)}
         activeOpacity={0.88}
-        accessibilityLabel="Add custom task"
+        accessibilityLabel={i18n.modals.addCustomTask.title}
         accessibilityRole="button"
       >
         <Ionicons name="add" size={22} color="#FFFFFF" style={{ marginRight: 4 }} />
-        <Text style={styles.fabText}>New Chore</Text>
+        <Text style={styles.fabText}>{i18n.catalogScreen.newChoreFab}</Text>
       </TouchableOpacity>
 
       <AddCustomTaskModal

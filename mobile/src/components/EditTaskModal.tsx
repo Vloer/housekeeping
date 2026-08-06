@@ -6,6 +6,7 @@ import { BaseModal } from './common/BaseModal';
 import { Colors } from '../theme/colors';
 import { FREQUENCY_PRESETS } from '../types';
 import { formatDate } from '../utils/dateUtils';
+import i18n, { t, getTaskName } from '../i18n';
 
 interface EditTaskData {
   catalogTaskId: number;
@@ -47,7 +48,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 
   useEffect(() => {
     if (taskData) {
-      setName(taskData.name);
+      setName(getTaskName(taskData.name));
       const isPreset = FREQUENCY_PRESETS.some((opt) => opt.days === taskData.frequencyDays);
       if (isPreset) {
         setFrequencyDays(taskData.frequencyDays);
@@ -84,7 +85,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   const handleSave = async () => {
     const trimmedName = name.trim();
     if (!trimmedName) {
-      Alert.alert('Validation Error', 'Task name cannot be empty.');
+      Alert.alert(i18n.onboarding.validationError, i18n.modals.editTask.taskNameEmpty);
       return;
     }
 
@@ -92,7 +93,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
     if (customDaysInput) {
       const parsed = parseInt(customDaysInput, 10);
       if (isNaN(parsed) || parsed <= 0) {
-        Alert.alert('Validation Error', 'Please enter a valid number of days.');
+        Alert.alert(i18n.onboarding.validationError, i18n.modals.editTask.pleaseEnterValidDays);
         return;
       }
       finalFreq = parsed;
@@ -110,7 +111,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
       });
       onClose();
     } catch (err) {
-      Alert.alert('Error', 'Failed to save changes.');
+      Alert.alert(i18n.onboarding.errorTitle, i18n.modals.editTask.failedToSave);
     } finally {
       setLoading(false);
     }
@@ -119,12 +120,12 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   const handleDelete = () => {
     if (!onDelete || !taskData.isCustom) return;
     Alert.alert(
-      'Delete Task',
-      `Are you sure you want to permanently delete "${taskData.name}"?`,
+      i18n.modals.editTask.deleteTaskTitle,
+      t(i18n.modals.editTask.deleteTaskConfirm, { name: taskData.name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: i18n.onboarding.cancel, style: 'cancel' },
         {
-          text: 'Delete',
+          text: i18n.modals.editTask.delete,
           style: 'destructive',
           onPress: async () => {
             await onDelete(taskData.catalogTaskId);
@@ -138,8 +139,8 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   const isTaskActive = taskData.isActive || !!taskData.activeTaskId || taskData.lastDoneDate !== undefined;
 
   return (
-    <BaseModal visible={visible} title="Edit Task" onClose={onClose}>
-      <Text style={styles.label}>Task Name</Text>
+    <BaseModal visible={visible} title={i18n.modals.editTask.title} onClose={onClose}>
+      <Text style={styles.label}>{i18n.modals.editTask.taskNameLabel}</Text>
       <TextInput
         style={styles.input}
         value={name}
@@ -147,7 +148,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         editable={taskData.isCustom}
       />
 
-      <Text style={styles.label}>Repeat Frequency</Text>
+      <Text style={styles.label}>{i18n.modals.editTask.repeatFrequencyLabel}</Text>
       <View style={styles.chipRow}>
         {FREQUENCY_PRESETS.map((option) => {
           const isSelected = frequencyDays === option.days && !customDaysInput;
@@ -168,10 +169,10 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         })}
       </View>
 
-      <Text style={styles.sublabel}>Or enter custom number of days:</Text>
+      <Text style={styles.sublabel}>{i18n.modals.editTask.customDaysLabel}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Custom days (e.g. 45)"
+        placeholder={i18n.modals.editTask.customDaysPlaceholder}
         keyboardType="numeric"
         value={customDaysInput}
         onChangeText={setCustomDaysInput}
@@ -179,26 +180,26 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 
       {isTaskActive && (
         <View style={styles.dateSection}>
-          <Text style={styles.label}>Last Done Date</Text>
+          <Text style={styles.label}>{i18n.modals.editTask.lastDoneDateLabel}</Text>
           
           <View style={styles.quickDateRow}>
             <TouchableOpacity
               style={styles.quickChip}
               onPress={() => handleSetQuickDate(0)}
             >
-              <Text style={styles.quickChipText}>Today</Text>
+              <Text style={styles.quickChipText}>{i18n.modals.editTask.today}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.quickChip}
               onPress={() => handleSetQuickDate(1)}
             >
-              <Text style={styles.quickChipText}>Yesterday</Text>
+              <Text style={styles.quickChipText}>{i18n.modals.editTask.yesterday}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.quickChip}
               onPress={() => handleSetQuickDate(2)}
             >
-              <Text style={styles.quickChipText}>2 days ago</Text>
+              <Text style={styles.quickChipText}>{i18n.modals.editTask.twoDaysAgo}</Text>
             </TouchableOpacity>
           </View>
 
@@ -229,12 +230,12 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         onPress={handleSave}
         disabled={loading}
       >
-        <Text style={styles.saveButtonText}>{loading ? 'Saving...' : 'Save Changes'}</Text>
+        <Text style={styles.saveButtonText}>{loading ? i18n.modals.editTask.savingButton : i18n.modals.editTask.saveChangesButton}</Text>
       </TouchableOpacity>
 
       {taskData.isCustom && onDelete && (
         <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-          <Text style={styles.deleteButtonText}>Delete Custom Task</Text>
+          <Text style={styles.deleteButtonText}>{i18n.modals.editTask.deleteCustomTaskButton}</Text>
         </TouchableOpacity>
       )}
     </BaseModal>

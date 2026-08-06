@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../theme/colors';
+import i18n from '../../i18n';
 
 interface BaseModalProps {
   visible: boolean;
@@ -42,7 +43,7 @@ export const BaseModal: React.FC<BaseModalProps> = ({ visible, title, onClose, c
               <TouchableOpacity
                 onPress={onClose}
                 style={styles.closeButton}
-                accessibilityLabel="Close modal"
+                accessibilityLabel={i18n.modals.baseModal.close}
                 accessibilityRole="button"
               >
                 <Ionicons name="close" size={20} color={Colors.textSecondary} />

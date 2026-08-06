@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useHousehold } from '../src/context/HouseholdContext';
 import { Household } from '../src/types';
 import { Colors } from '../src/theme/colors';
+import i18n, { t } from '../src/i18n';
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function OnboardingScreen() {
       await connectRecentHousehold(h);
       router.replace('/(tabs)');
     } catch (err) {
-      Alert.alert('Error', 'Failed to connect to recent household.');
+      Alert.alert(i18n.onboarding.errorTitle, i18n.onboarding.failedToConnect);
     } finally {
       setLoading(false);
     }
@@ -49,12 +50,12 @@ export default function OnboardingScreen() {
 
   const handleRemoveRecent = (h: Household) => {
     Alert.alert(
-      'Remove Household',
-      `Remove "${h.name}" from your recent list?`,
+      i18n.onboarding.removeHouseholdTitle,
+      t(i18n.onboarding.removeHouseholdConfirm, { name: h.name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: i18n.onboarding.cancel, style: 'cancel' },
         {
-          text: 'Remove',
+          text: i18n.onboarding.remove,
           style: 'destructive',
           onPress: () => removeRecentHousehold(h.household_id),
         },
@@ -65,7 +66,7 @@ export default function OnboardingScreen() {
   const handleJoinPress = async () => {
     const trimmedCode = joinCode.trim().toUpperCase();
     if (!trimmedCode) {
-      Alert.alert('Validation Error', 'Please enter a valid join code (e.g. HK-ABCD).');
+      Alert.alert(i18n.onboarding.validationError, i18n.onboarding.enterValidJoinCode);
       return;
     }
 
@@ -84,8 +85,8 @@ export default function OnboardingScreen() {
         }
       }
     } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Household not found. Check join code.';
-      Alert.alert('Error', msg);
+      const msg = err.response?.data?.detail || i18n.onboarding.notFoundJoinCode;
+      Alert.alert(i18n.onboarding.errorTitle, msg);
     } finally {
       setLoading(false);
     }
@@ -94,7 +95,7 @@ export default function OnboardingScreen() {
   const handleConfirmJoinNew = async () => {
     const trimmedName = nameInput.trim();
     if (!trimmedName) {
-      Alert.alert('Validation Error', 'Please enter your name for this household.');
+      Alert.alert(i18n.onboarding.validationError, i18n.onboarding.enterYourName);
       return;
     }
 
@@ -103,8 +104,8 @@ export default function OnboardingScreen() {
       await joinHousehold(joinCode.trim().toUpperCase(), trimmedName);
       router.replace('/(tabs)');
     } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Failed to join household.';
-      Alert.alert('Error', msg);
+      const msg = err.response?.data?.detail || i18n.onboarding.failedToJoin;
+      Alert.alert(i18n.onboarding.errorTitle, msg);
     } finally {
       setLoading(false);
     }
@@ -113,13 +114,13 @@ export default function OnboardingScreen() {
   const handleCreateSubmit = async () => {
     const trimmedHName = householdName.trim();
     if (!trimmedHName) {
-      Alert.alert('Validation Error', 'Please enter a household name.');
+      Alert.alert(i18n.onboarding.validationError, i18n.onboarding.enterHouseholdName);
       return;
     }
 
     const trimmedName = nameInput.trim();
     if (!trimmedName) {
-      Alert.alert('Validation Error', 'Please enter your name for this household.');
+      Alert.alert(i18n.onboarding.validationError, i18n.onboarding.enterYourName);
       return;
     }
 
@@ -128,8 +129,8 @@ export default function OnboardingScreen() {
       await createHousehold(trimmedHName, trimmedName);
       router.replace('/(tabs)');
     } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Failed to create household.';
-      Alert.alert('Error', msg);
+      const msg = err.response?.data?.detail || i18n.onboarding.failedToCreate;
+      Alert.alert(i18n.onboarding.errorTitle, msg);
     } finally {
       setLoading(false);
     }
@@ -144,18 +145,18 @@ export default function OnboardingScreen() {
         <View style={styles.headerIcon}>
           <Ionicons name="home" size={48} color={Colors.primaryLight} />
         </View>
-        <Text style={styles.title}>Household Setup</Text>
+        <Text style={styles.title}>{i18n.onboarding.title}</Text>
 
         {/* Previously Connected Households Section */}
         {recentHouseholds.length > 0 && (
           <View style={styles.recentsContainer}>
-            <Text style={styles.sectionTitle}>Your Connected Households</Text>
+            <Text style={styles.sectionTitle}>{i18n.onboarding.yourConnectedHouseholds}</Text>
             {recentHouseholds.map((h) => (
               <View key={h.household_id} style={styles.recentCard}>
                 <View style={styles.recentInfo}>
                   <Text style={styles.recentName}>{h.name}</Text>
                   <Text style={styles.recentSubtext}>
-                    Code: <Text style={styles.codeText}>{h.join_code}</Text> • As <Text style={styles.userText}>{h.username}</Text>
+                    {i18n.onboarding.codeLabel} <Text style={styles.codeText}>{h.join_code}</Text> • {i18n.onboarding.asUser} <Text style={styles.userText}>{h.username}</Text>
                   </Text>
                 </View>
 
@@ -165,7 +166,7 @@ export default function OnboardingScreen() {
                     onPress={() => handleConnectRecent(h)}
                     disabled={loading}
                   >
-                    <Text style={styles.connectBtnText}>Connect</Text>
+                    <Text style={styles.connectBtnText}>{i18n.onboarding.connect}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -181,7 +182,7 @@ export default function OnboardingScreen() {
         )}
 
         <Text style={styles.subtitle}>
-          {recentHouseholds.length > 0 ? 'Or connect to a new household:' : 'Join an existing household or create a new one.'}
+          {recentHouseholds.length > 0 ? i18n.onboarding.subtitleWithRecents : i18n.onboarding.subtitleWithoutRecents}
         </Text>
 
         {!showNameStep && (
@@ -193,7 +194,7 @@ export default function OnboardingScreen() {
                 setShowNameStep(false);
               }}
             >
-              <Text style={[styles.tabText, mode === 'JOIN' && styles.tabTextActive]}>Join Household</Text>
+              <Text style={[styles.tabText, mode === 'JOIN' && styles.tabTextActive]}>{i18n.onboarding.joinTab}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.tab, mode === 'CREATE' && styles.tabActive]}
@@ -202,7 +203,7 @@ export default function OnboardingScreen() {
                 setShowNameStep(false);
               }}
             >
-              <Text style={[styles.tabText, mode === 'CREATE' && styles.tabTextActive]}>Create New</Text>
+              <Text style={[styles.tabText, mode === 'CREATE' && styles.tabTextActive]}>{i18n.onboarding.createTab}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -210,19 +211,19 @@ export default function OnboardingScreen() {
         <View style={styles.form}>
           {mode === 'CREATE' ? (
             <>
-              <Text style={styles.label}>Household Name</Text>
+              <Text style={styles.label}>{i18n.onboarding.householdNameLabel}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. Cozy Cottage"
+                placeholder={i18n.onboarding.householdNamePlaceholder}
                 placeholderTextColor={Colors.textMuted}
                 value={householdName}
                 onChangeText={setHouseholdName}
               />
 
-              <Text style={styles.label}>Your Name in this Household</Text>
+              <Text style={styles.label}>{i18n.onboarding.yourNameLabel}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. Alex"
+                placeholder={i18n.onboarding.yourNamePlaceholder}
                 placeholderTextColor={Colors.textMuted}
                 value={nameInput}
                 onChangeText={setNameInput}
@@ -234,7 +235,7 @@ export default function OnboardingScreen() {
                 disabled={loading}
               >
                 <Text style={styles.submitButtonText}>
-                  {loading ? 'Creating...' : 'Create Household'}
+                  {loading ? i18n.onboarding.creatingButton : i18n.onboarding.createButton}
                 </Text>
               </TouchableOpacity>
             </>
@@ -242,13 +243,13 @@ export default function OnboardingScreen() {
             <>
               <View style={styles.infoBox}>
                 <Ionicons name="sparkles" size={20} color={Colors.accent} />
-                <Text style={styles.infoBoxText}>First time joining this household!</Text>
+                <Text style={styles.infoBoxText}>{i18n.onboarding.firstTimeJoining}</Text>
               </View>
 
-              <Text style={styles.label}>Your Name in this Household</Text>
+              <Text style={styles.label}>{i18n.onboarding.yourNameLabel}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. Alex"
+                placeholder={i18n.onboarding.yourNamePlaceholder}
                 placeholderTextColor={Colors.textMuted}
                 value={nameInput}
                 onChangeText={setNameInput}
@@ -261,7 +262,7 @@ export default function OnboardingScreen() {
                 disabled={loading}
               >
                 <Text style={styles.submitButtonText}>
-                  {loading ? 'Joining...' : 'Confirm & Join'}
+                  {loading ? i18n.onboarding.joiningButton : i18n.onboarding.confirmJoinButton}
                 </Text>
               </TouchableOpacity>
 
@@ -269,15 +270,15 @@ export default function OnboardingScreen() {
                 style={styles.backButton}
                 onPress={() => setShowNameStep(false)}
               >
-                <Text style={styles.backButtonText}>Back</Text>
+                <Text style={styles.backButtonText}>{i18n.onboarding.back}</Text>
               </TouchableOpacity>
             </>
           ) : (
             <>
-              <Text style={styles.label}>Join Code</Text>
+              <Text style={styles.label}>{i18n.onboarding.joinCodeLabel}</Text>
               <TextInput
                 style={[styles.input, styles.joinCodeInput]}
-                placeholder="HK-XXXX"
+                placeholder={i18n.onboarding.joinCodePlaceholder}
                 placeholderTextColor={Colors.textMuted}
                 autoCapitalize="characters"
                 value={joinCode}
@@ -290,7 +291,7 @@ export default function OnboardingScreen() {
                 disabled={loading}
               >
                 <Text style={styles.submitButtonText}>
-                  {loading ? 'Checking...' : 'Join Household'}
+                  {loading ? i18n.onboarding.checkingButton : i18n.onboarding.joinButton}
                 </Text>
               </TouchableOpacity>
             </>

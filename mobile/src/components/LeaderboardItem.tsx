@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { HighscoreEntry } from '../types';
 import { Colors } from '../theme/colors';
+import i18n from '../i18n';
 
 interface LeaderboardItemProps {
   entry: HighscoreEntry;
@@ -50,13 +51,13 @@ const LeaderboardItemComponent: React.FC<LeaderboardItemProps> = ({ entry, isCur
 
       <View style={styles.userInfo}>
         <Text style={[styles.username, isCurrentUser && styles.currentUserText]}>
-          {entry.username} {isCurrentUser ? '(You)' : ''}
+          {entry.username} {isCurrentUser ? i18n.components.leaderboardItem.you : ''}
         </Text>
       </View>
 
       <View style={styles.pointsBadge}>
         <Text style={styles.pointsNumber}>{entry.points}</Text>
-        <Text style={styles.pointsUnit}>pts</Text>
+        <Text style={styles.pointsUnit}>{i18n.components.leaderboardItem.pts}</Text>
         <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} style={styles.arrow} />
       </View>
     </TouchableOpacity>

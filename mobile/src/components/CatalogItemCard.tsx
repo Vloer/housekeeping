@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CatalogTask } from '../types';
 import { Colors } from '../theme/colors';
+import i18n, { t, getTaskName } from '../i18n';
 
 interface CatalogItemCardProps {
   task: CatalogTask;
@@ -29,11 +30,11 @@ const CatalogItemCardComponent: React.FC<CatalogItemCardProps> = ({
       <View style={styles.content}>
         {/* Header Row: Task Name & Badges */}
         <View style={styles.headerRow}>
-          <Text style={styles.name} numberOfLines={1}>{task.name}</Text>
+          <Text style={styles.name} numberOfLines={1}>{getTaskName(task.name)}</Text>
           {task.is_custom && (
             <View style={styles.customBadge}>
               <Ionicons name="sparkles" size={10} color={Colors.accent} style={{ marginRight: 3 }} />
-              <Text style={styles.customBadgeText}>Custom</Text>
+              <Text style={styles.customBadgeText}>{i18n.components.catalogItemCard.custom}</Text>
             </View>
           )}
         </View>
@@ -42,13 +43,13 @@ const CatalogItemCardComponent: React.FC<CatalogItemCardProps> = ({
         <View style={styles.metaRow}>
           <View style={styles.freqBadge}>
             <Ionicons name="repeat" size={12} color={Colors.primary} style={{ marginRight: 4 }} />
-            <Text style={styles.freqText}>Every {task.frequency_days}d</Text>
+            <Text style={styles.freqText}>{t(i18n.components.catalogItemCard.everyDays, { days: task.frequency_days })}</Text>
           </View>
 
           {task.is_active && (
             <View style={styles.activePill}>
               <View style={styles.activeDot} />
-              <Text style={styles.activePillText}>Active Chore</Text>
+              <Text style={styles.activePillText}>{i18n.components.catalogItemCard.activeChore}</Text>
             </View>
           )}
         </View>
@@ -56,14 +57,14 @@ const CatalogItemCardComponent: React.FC<CatalogItemCardProps> = ({
         {/* Dates Row */}
         <View style={styles.datesRow}>
           <View style={styles.dateChip}>
-            <Text style={styles.dateLabel}>Last:</Text>
-            <Text style={styles.dateValue}>{task.last_done_date || 'Never'}</Text>
+            <Text style={styles.dateLabel}>{i18n.components.catalogItemCard.lastDone}</Text>
+            <Text style={styles.dateValue}>{task.last_done_date || i18n.components.catalogItemCard.never}</Text>
           </View>
 
           <View style={styles.dateChip}>
-            <Text style={styles.dateLabel}>Next:</Text>
+            <Text style={styles.dateLabel}>{i18n.components.catalogItemCard.nextDue}</Text>
             <Text style={[styles.dateValue, task.is_active && styles.dateValueActive]}>
-              {task.is_active ? (task.due_date || 'N/A') : 'Inactive'}
+              {task.is_active ? (task.due_date || i18n.components.catalogItemCard.na) : i18n.components.catalogItemCard.inactive}
             </Text>
           </View>
         </View>
@@ -81,7 +82,7 @@ const CatalogItemCardComponent: React.FC<CatalogItemCardProps> = ({
           <TouchableOpacity
             onPress={() => onDelete(task.id)}
             style={styles.deleteButton}
-            accessibilityLabel={`Delete ${task.name}`}
+            accessibilityLabel={t(i18n.components.catalogItemCard.deleteTaskAccess, { name: task.name })}
             accessibilityRole="button"
           >
             <Ionicons name="trash-outline" size={16} color={Colors.danger} />

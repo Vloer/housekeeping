@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ActiveTask } from '../types';
 import { Colors } from '../theme/colors';
 import { getTodayStr, getOverdueTheme } from '../utils/dateUtils';
+import i18n, { t, getTaskName } from '../i18n';
 
 interface TaskCardProps {
   task: ActiveTask;
@@ -29,7 +30,9 @@ const TaskCardComponent: React.FC<TaskCardProps> = ({ task, onComplete, onLongPr
       return (
         <View style={[styles.badge, { backgroundColor: theme.bg, borderColor: theme.border }]}>
           <Ionicons name="alert-circle" size={12} color={theme.text} style={{ marginRight: 4 }} />
-          <Text style={[styles.badgeText, { color: theme.text }]}>{task.days_overdue}d overdue</Text>
+          <Text style={[styles.badgeText, { color: theme.text }]}>
+            {t(i18n.components.taskCard.overdue, { days: task.days_overdue })}
+          </Text>
         </View>
       );
     }
@@ -39,7 +42,7 @@ const TaskCardComponent: React.FC<TaskCardProps> = ({ task, onComplete, onLongPr
       return (
         <View style={[styles.badge, { backgroundColor: Colors.accentSoft, borderColor: 'rgba(244, 162, 97, 0.3)' }]}>
           <Ionicons name="time" size={12} color={Colors.accent} style={{ marginRight: 4 }} />
-          <Text style={[styles.badgeText, { color: Colors.accent }]}>Due Today</Text>
+          <Text style={[styles.badgeText, { color: Colors.accent }]}>{i18n.components.taskCard.dueToday}</Text>
         </View>
       );
     }
@@ -50,7 +53,7 @@ const TaskCardComponent: React.FC<TaskCardProps> = ({ task, onComplete, onLongPr
       <View style={[styles.badge, { backgroundColor: Colors.secondarySoft, borderColor: 'rgba(42, 157, 143, 0.3)' }]}>
         <Ionicons name="checkmark-circle-outline" size={12} color={Colors.secondary} style={{ marginRight: 4 }} />
         <Text style={[styles.badgeText, { color: Colors.secondary }]}>
-          {isDueTomorrow ? 'Due Tomorrow' : `Due in ${inDays}d`}
+          {isDueTomorrow ? i18n.components.taskCard.dueTomorrow : t(i18n.components.taskCard.dueInDays, { days: inDays })}
         </Text>
       </View>
     );
@@ -66,16 +69,16 @@ const TaskCardComponent: React.FC<TaskCardProps> = ({ task, onComplete, onLongPr
         style={styles.doneButton}
         onPress={() => onComplete(task.id)}
         activeOpacity={0.7}
-        accessibilityLabel="Mark task as completed"
+        accessibilityLabel={i18n.components.taskCard.markAsCompleted}
         accessibilityRole="button"
       >
         <Ionicons name="checkmark" size={20} color="#FFFFFF" />
       </TouchableOpacity>
 
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={1}>{task.task_name}</Text>
+        <Text style={styles.title} numberOfLines={1}>{getTaskName(task.task_name)}</Text>
         <View style={styles.metaRow}>
-          <Text style={styles.frequencyText}>Repeat: {task.frequency_days}d</Text>
+          <Text style={styles.frequencyText}>{t(i18n.components.taskCard.repeat, { days: task.frequency_days })}</Text>
           <Text style={styles.dot}>•</Text>
           {getStatusBadge()}
         </View>
