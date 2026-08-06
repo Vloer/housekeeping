@@ -45,24 +45,9 @@ export const apiClient = axios.create({
   timeout: 10000,
 });
 
-// Request Interceptor: Log outgoing requests
-apiClient.interceptors.request.use(
-  (config) => {
-    console.log(`[HTTP Outgoing] ${config.method?.toUpperCase()} -> ${config.baseURL}${config.url}`, config.data ? JSON.stringify(config.data) : '');
-    return config;
-  },
-  (error) => {
-    console.error('[HTTP Request Error]', error);
-    return Promise.reject(error);
-  }
-);
-
-// Response Interceptor: Log responses and detail errors
+// Response Interceptor: Log errors only
 apiClient.interceptors.response.use(
-  (response) => {
-    console.log(`[HTTP Response] ${response.status} <- ${response.config.url}`);
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error.response) {
       console.error(`[HTTP Server Error] ${error.response.status} <- ${error.config?.url}:`, JSON.stringify(error.response.data));

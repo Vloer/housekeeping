@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { BaseModal } from './common/BaseModal';
 import { Colors } from '../theme/colors';
@@ -66,11 +66,11 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 
   if (!taskData) return null;
 
-  const handleDateChange = (event: DateTimePickerEvent, date?: Date) => {
+  const handleDateChange = (event: any, date?: Date) => {
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
     }
-    if (event.type === 'set' && date) {
+    if (date) {
       setSelectedDate(date);
     }
   };
@@ -216,6 +216,8 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               mode="date"
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
               onChange={handleDateChange}
+              onValueChange={handleDateChange}
+              onDismiss={() => setShowDatePicker(false)}
               maximumDate={new Date()}
             />
           )}

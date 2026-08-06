@@ -18,8 +18,7 @@ export default function CatalogScreen() {
     deactivateTaskOptimistic,
     addCustomTaskOptimistic,
     deleteTaskOptimistic,
-    updateTaskDetailsOptimistic,
-    updateTaskLastDoneOptimistic,
+    updateTaskDetailsAndLastDoneOptimistic,
   } = useHousehold();
 
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -77,17 +76,18 @@ export default function CatalogScreen() {
     frequencyDays: number;
     lastDoneDate?: string;
   }) => {
-    await updateTaskDetailsOptimistic(data.catalogTaskId, data.name, data.frequencyDays);
-    if (data.lastDoneDate) {
-      let targetActiveId = data.activeTaskId;
-      if (!targetActiveId) {
-        const found = activeTasks.find((a) => a.catalog_task_id === data.catalogTaskId);
-        if (found) targetActiveId = found.id;
-      }
-      if (targetActiveId) {
-        await updateTaskLastDoneOptimistic(targetActiveId, data.lastDoneDate);
-      }
+    let targetActiveId = data.activeTaskId;
+    if (!targetActiveId) {
+      const found = activeTasks.find((a) => a.catalog_task_id === data.catalogTaskId);
+      if (found) targetActiveId = found.id;
     }
+    await updateTaskDetailsAndLastDoneOptimistic(
+      data.catalogTaskId,
+      data.name,
+      data.frequencyDays,
+      targetActiveId,
+      data.lastDoneDate
+    );
   };
 
   const activeTaskForEditing = useMemo(() => {

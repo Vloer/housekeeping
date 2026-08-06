@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import * as Crypto from 'expo-crypto';
 import { Household, ActiveTask, CatalogTask, HighscoreEntry } from '../types';
 import * as api from '../services/api';
@@ -30,6 +30,13 @@ interface HouseholdContextType {
   deleteTaskOptimistic: (catalogTaskId: number) => Promise<void>;
   updateTaskLastDoneOptimistic: (activeTaskId: number, lastDoneDate: string) => Promise<void>;
   updateTaskDetailsOptimistic: (catalogTaskId: number, name: string, frequencyDays: number) => Promise<void>;
+  updateTaskDetailsAndLastDoneOptimistic: (
+    catalogTaskId: number,
+    name: string,
+    frequencyDays: number,
+    activeTaskId?: number | null,
+    lastDoneDate?: string | null
+  ) => Promise<void>;
 }
 
 const HouseholdContext = createContext<HouseholdContextType | undefined>(undefined);
@@ -43,6 +50,9 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [catalogTasks, setCatalogTasks] = useState<CatalogTask[]>([]);
   const [highscores, setHighscores] = useState<HighscoreEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // In-flight refresh promise ref to prevent duplicate parallel fetches
+  const inFlightRefreshPromiseRef = useRef<Promise<void> | null>(null);
 
   // Initialize or load user identity & household state
   useEffect(() => {
@@ -72,13 +82,44 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     initStorage();
   }, []);
 
+  const refreshData = useCallback(async (): Promise<void> => {
+    if (!household?.household_id) return;
+
+    if (inFlightRefreshPromiseRef.current) {
+      return inFlightRefreshPromiseRef.current;
+    }
+
+    const promise = (async () => {
+      try {
+        setLoading(true);
+        const [active, catalog, scores] = await Promise.all([
+          api.getActiveTasks(household.household_id),
+          api.getCatalogTasks(household.household_id),
+          api.getHouseholdHighscores(household.household_id),
+        ]);
+        setActiveTasks(active);
+        setCatalogTasks(catalog);
+        setHighscores(scores);
+        scheduleDailyTaskReminder(active);
+      } catch (err) {
+        console.error('Error refreshing data from server:', err);
+      } finally {
+        setLoading(false);
+        inFlightRefreshPromiseRef.current = null;
+      }
+    })();
+
+    inFlightRefreshPromiseRef.current = promise;
+    return promise;
+  }, [household?.household_id]);
+
   // Fetch data whenever household changes
   useEffect(() => {
     if (household?.household_id) {
       refreshData();
       requestNotificationPermissions();
     }
-  }, [household?.household_id]);
+  }, [household?.household_id, refreshData]);
 
   const saveToRecentHouseholds = async (h: Household) => {
     const updated = await storageService.saveRecentHousehold(h);
@@ -88,26 +129,6 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const removeRecentHousehold = async (householdId: number) => {
     const updated = await storageService.removeRecentHousehold(householdId);
     setRecentHouseholds(updated);
-  };
-
-  const refreshData = async () => {
-    if (!household?.household_id) return;
-    try {
-      setLoading(true);
-      const [active, catalog, scores] = await Promise.all([
-        api.getActiveTasks(household.household_id),
-        api.getCatalogTasks(household.household_id),
-        api.getHouseholdHighscores(household.household_id),
-      ]);
-      setActiveTasks(active);
-      setCatalogTasks(catalog);
-      setHighscores(scores);
-      scheduleDailyTaskReminder(active);
-    } catch (err) {
-      console.error('Error refreshing data from server:', err);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const setUserProfileName = async (name: string) => {
@@ -279,6 +300,44 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  const updateTaskDetailsAndLastDoneOptimistic = async (
+    catalogTaskId: number,
+    name: string,
+    frequencyDays: number,
+    activeTaskId?: number | null,
+    lastDoneDate?: string | null
+  ) => {
+    if (!household) return;
+
+    setCatalogTasks((prev) =>
+      prev.map((c) =>
+        c.id === catalogTaskId
+          ? { ...c, name, frequency_days: frequencyDays, default_frequency_days: frequencyDays, last_done_date: lastDoneDate || c.last_done_date }
+          : c
+      )
+    );
+
+    if (activeTaskId && lastDoneDate) {
+      setActiveTasks((prev) =>
+        prev.map((t) => (t.id === activeTaskId ? { ...t, task_name: name, frequency_days: frequencyDays, last_done_date: lastDoneDate } : t))
+      );
+    }
+
+    try {
+      const promises: Promise<any>[] = [
+        api.updateTask(household.household_id, catalogTaskId, name, frequencyDays),
+      ];
+      if (activeTaskId && lastDoneDate) {
+        promises.push(api.updateTaskLastDone(activeTaskId, lastDoneDate));
+      }
+      await Promise.all(promises);
+    } catch (err) {
+      console.error('Failed to update task details/last done date:', err);
+    } finally {
+      await refreshData();
+    }
+  };
+
   return (
     <HouseholdContext.Provider
       value={{
@@ -305,6 +364,7 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         deleteTaskOptimistic,
         updateTaskLastDoneOptimistic,
         updateTaskDetailsOptimistic,
+        updateTaskDetailsAndLastDoneOptimistic,
       }}
     >
       {children}

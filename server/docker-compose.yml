@@ -7,8 +7,20 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - API_AUTH_TOKEN=${API_AUTH_TOKEN:-hk_secret_token_2026}
+      - API_AUTH_TOKEN=${API_AUTH_TOKEN}
     volumes:
       # Mount local directory to persist SQLite database outside container
       - .:/app
+    restart: always
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    ports:
+      - "${DOZZLE_PORT:-8080}:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - DOZZLE_USERNAME=${DOZZLE_USERNAME}
+      - DOZZLE_PASSWORD=${DOZZLE_PASSWORD}
     restart: always

@@ -57,6 +57,10 @@ server/README.md
 # Agents
 .agents
 
+# Environment variables
+.env
+*.env
+
 # Database
 *.db
 *.db.bak
