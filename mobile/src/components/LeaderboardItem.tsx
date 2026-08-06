@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { HighscoreEntry } from '../types';
 import { Colors } from '../theme/colors';
-import i18n from '../i18n';
+import { useLanguage } from '../i18n';
 
 interface LeaderboardItemProps {
   entry: HighscoreEntry;
@@ -12,6 +12,7 @@ interface LeaderboardItemProps {
 }
 
 const LeaderboardItemComponent: React.FC<LeaderboardItemProps> = ({ entry, isCurrentUser, onPress }) => {
+  const { i18n } = useLanguage();
   const getRankBadge = () => {
     if (entry.rank === 1) {
       return (

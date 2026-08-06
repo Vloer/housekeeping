@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ActiveTask } from '../types';
 import { Colors } from '../theme/colors';
 import { getTodayStr, getOverdueTheme } from '../utils/dateUtils';
-import i18n, { t, getTaskName } from '../i18n';
+import { useLanguage } from '../i18n';
 
 interface TaskCardProps {
   task: ActiveTask;
@@ -13,6 +13,7 @@ interface TaskCardProps {
 }
 
 const TaskCardComponent: React.FC<TaskCardProps> = ({ task, onComplete, onLongPress }) => {
+  const { i18n, t, getTaskName } = useLanguage();
   const isOverdue = task.days_overdue > 0;
   const todayStr = getTodayStr();
   const isDueToday = task.days_overdue === 0 || task.due_date === todayStr;

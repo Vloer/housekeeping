@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CatalogTask } from '../types';
 import { Colors } from '../theme/colors';
-import i18n, { t, getTaskName } from '../i18n';
+import { useLanguage } from '../i18n';
 
 interface CatalogItemCardProps {
   task: CatalogTask;
@@ -18,6 +18,7 @@ const CatalogItemCardComponent: React.FC<CatalogItemCardProps> = ({
   onDelete,
   onLongPress,
 }) => {
+  const { i18n, t, getTaskName } = useLanguage();
   return (
     <TouchableOpacity
       style={[styles.card, task.is_active && styles.cardActive]}

@@ -7,10 +7,11 @@ import { TaskCard } from '../../src/components/TaskCard';
 import { ActiveTask } from '../../src/types';
 import { Colors } from '../../src/theme/colors';
 import { getTodayStr, getIn7DaysStr, getThisWeekBounds } from '../../src/utils/dateUtils';
-import i18n, { t } from '../../src/i18n';
+import { useLanguage } from '../../src/i18n';
 
 export default function ActiveTasksScreen() {
   const router = useRouter();
+  const { i18n, t } = useLanguage();
   const {
     household,
     activeTasks,

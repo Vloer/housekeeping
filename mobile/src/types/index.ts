@@ -42,15 +42,20 @@ export interface UserTaskStat {
   total_points: number;
 }
 
-export const FREQUENCY_PRESETS = [
-  { label: i18n.frequencyPresets.weekly, days: 7 },
-  { label: i18n.frequencyPresets.biweekly, days: 14 },
-  { label: i18n.frequencyPresets.monthly, days: 30 },
-  { label: i18n.frequencyPresets.bimonthly, days: 60 },
-  { label: i18n.frequencyPresets.quarterly, days: 90 },
-  { label: i18n.frequencyPresets.halfYearly, days: 180 },
-  { label: i18n.frequencyPresets.yearly, days: 365 },
-] as const;
+export interface FrequencyPreset {
+  label: string;
+  days: number;
+  key: string;
+}
 
-export type FrequencyPreset = typeof FREQUENCY_PRESETS[number];
+export const getFrequencyPresets = (activeI18n: typeof i18n): FrequencyPreset[] => [
+  { key: 'weekly', label: activeI18n.frequencyPresets.weekly, days: 7 },
+  { key: 'biweekly', label: activeI18n.frequencyPresets.biweekly, days: 14 },
+  { key: 'monthly', label: activeI18n.frequencyPresets.monthly, days: 30 },
+  { key: 'bimonthly', label: activeI18n.frequencyPresets.bimonthly, days: 60 },
+  { key: 'quarterly', label: activeI18n.frequencyPresets.quarterly, days: 90 },
+  { key: 'halfYearly', label: activeI18n.frequencyPresets.halfYearly, days: 180 },
+  { key: 'yearly', label: activeI18n.frequencyPresets.yearly, days: 365 },
+];
 
+export const FREQUENCY_PRESETS = getFrequencyPresets(i18n);

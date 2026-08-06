@@ -5,12 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHousehold } from '../../src/context/HouseholdContext';
 import { Colors } from '../../src/theme/colors';
-import i18n, { t } from '../../src/i18n';
+import { useLanguage } from '../../src/i18n';
+import { LanguageToggle } from '../../src/components/LanguageToggle';
 
 export default function TabLayout() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { household, leaveHousehold } = useHousehold();
+  const { i18n, t } = useLanguage();
 
   // Generous bottom padding clear of phone navigation bar
   const bottomInset = Math.max(insets.bottom + 10, 18);
@@ -49,17 +51,20 @@ export default function TabLayout() {
           fontSize: 18,
         },
         headerRight: () => (
-          <TouchableOpacity
-            style={styles.switchButton}
-            onPress={handleSwitchHousehold}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="home-outline" size={15} color={Colors.primary} />
-            <Text style={styles.switchButtonText} numberOfLines={1}>
-              {household?.name || i18n.tabs.switchDefault}
-            </Text>
-            <Ionicons name="swap-horizontal" size={15} color={Colors.textSecondary} />
-          </TouchableOpacity>
+          <View style={styles.headerRightContainer}>
+            <LanguageToggle />
+            <TouchableOpacity
+              style={styles.switchButton}
+              onPress={handleSwitchHousehold}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="home-outline" size={15} color={Colors.primary} />
+              <Text style={styles.switchButtonText} numberOfLines={1}>
+                {household?.name || i18n.tabs.switchDefault}
+              </Text>
+              <Ionicons name="swap-horizontal" size={15} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
         ),
         tabBarStyle: {
           backgroundColor: Colors.surface,
@@ -113,18 +118,23 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
+  headerRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginRight: 12,
+  },
   switchButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surfaceSoft,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    marginRight: 16,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: Colors.border,
     gap: 6,
-    maxWidth: 160,
+    maxWidth: 140,
   },
   switchButtonText: {
     color: Colors.text,

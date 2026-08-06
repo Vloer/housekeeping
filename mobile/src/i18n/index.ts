@@ -1,4 +1,5 @@
 import i18nData from '../../../server/i18n/en-us.i18n.json';
+export { LanguageProvider, useLanguage, LanguageCode, DICTIONARIES } from './LanguageContext';
 
 export const i18n = i18nData;
 

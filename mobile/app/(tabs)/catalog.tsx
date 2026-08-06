@@ -7,11 +7,12 @@ import { AddCustomTaskModal } from '../../src/components/AddCustomTaskModal';
 import { EditTaskModal } from '../../src/components/EditTaskModal';
 import { CatalogTask } from '../../src/types';
 import { Colors } from '../../src/theme/colors';
-import i18n, { getTaskName } from '../../src/i18n';
+import { useLanguage } from '../../src/i18n';
 
 type FilterTab = 'ALL' | 'ACTIVE' | 'INACTIVE' | 'CUSTOM';
 
 export default function CatalogScreen() {
+  const { i18n, getTaskName } = useLanguage();
   const {
     catalogTasks,
     activeTasks,

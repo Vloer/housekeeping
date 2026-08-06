@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { BaseModal } from './common/BaseModal';
 import { Colors } from '../theme/colors';
-import { FREQUENCY_PRESETS } from '../types';
-import i18n from '../i18n';
+import { getFrequencyPresets } from '../types';
+import { useLanguage } from '../i18n';
 
 interface AddCustomTaskModalProps {
   visible: boolean;
@@ -12,6 +12,8 @@ interface AddCustomTaskModalProps {
 }
 
 export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible, onClose, onAdd }) => {
+  const { i18n } = useLanguage();
+  const presets = getFrequencyPresets(i18n);
   const [name, setName] = useState('');
   const [frequencyDays, setFrequencyDays] = useState(30);
   const [customDaysInput, setCustomDaysInput] = useState('');
@@ -61,11 +63,11 @@ export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible,
 
       <Text style={styles.label}>{i18n.modals.addCustomTask.repeatFrequencyLabel}</Text>
       <View style={styles.chipRow}>
-        {FREQUENCY_PRESETS.map((option) => {
+        {presets.map((option) => {
           const isSelected = frequencyDays === option.days && !customDaysInput;
           return (
             <TouchableOpacity
-              key={option.label}
+              key={option.days}
               style={[styles.chip, isSelected && styles.chipSelected]}
               onPress={() => {
                 setFrequencyDays(option.days);

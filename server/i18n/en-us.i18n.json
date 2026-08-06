@@ -54,7 +54,7 @@
     "asUser": "As",
     "connect": "Connect",
     "subtitleWithRecents": "Or connect to a new household:",
-    "subtitleWithoutRecents": "Join an existing household or create a new one.",
+    "subtitleWithoutRecents": "Join an existing household or create a new one",
     "joinTab": "Join Household",
     "createTab": "Create New",
     "householdNameLabel": "Household Name",
@@ -62,28 +62,28 @@
     "yourNameLabel": "Your Name in this Household",
     "yourNamePlaceholder": "e.g. Alex",
     "createButton": "Create Household",
-    "creatingButton": "Creating...",
+    "creatingButton": "Creating..",
     "firstTimeJoining": "First time joining this household!",
     "confirmJoinButton": "Confirm & Join",
-    "joiningButton": "Joining...",
+    "joiningButton": "Joining..",
     "back": "Back",
     "joinCodeLabel": "Join Code",
     "joinCodePlaceholder": "HK-XXXX",
     "joinButton": "Join Household",
-    "checkingButton": "Checking...",
+    "checkingButton": "Checking..",
     "errorTitle": "Error",
-    "failedToConnect": "Failed to connect to recent household.",
+    "failedToConnect": "Failed to connect to recent household",
     "removeHouseholdTitle": "Remove Household",
     "removeHouseholdConfirm": "Remove \"{name}\" from your recent list?",
     "cancel": "Cancel",
     "remove": "Remove",
     "validationError": "Validation Error",
-    "enterValidJoinCode": "Please enter a valid join code (e.g. HK-ABCD).",
-    "notFoundJoinCode": "Household not found. Check join code.",
-    "enterYourName": "Please enter your name for this household.",
-    "failedToJoin": "Failed to join household.",
-    "enterHouseholdName": "Please enter a household name.",
-    "failedToCreate": "Failed to create household."
+    "enterValidJoinCode": "Please enter a valid join code (e.g. HK-ABCD)",
+    "notFoundJoinCode": "Household not found. Check join code",
+    "enterYourName": "Please enter your name for this household",
+    "failedToJoin": "Failed to join household",
+    "enterHouseholdName": "Please enter a household name",
+    "failedToCreate": "Failed to create household"
   },
   "tabs": {
     "activeTasks": "Active Tasks",
@@ -101,22 +101,22 @@
     "choresOverduePlural": "{count} chores overdue this week",
     "thisWeek": "This Week",
     "emptyTitle": "Your Home is Sparkling!",
-    "emptySubtitle": "No tasks due right now. Sit back and enjoy your clean home, or activate tasks from the catalog tab.",
+    "emptySubtitle": "No tasks due right now. Sit back and enjoy your clean home, or activate tasks from the list tab",
     "taskDoneTitle": "Task Done! 🎉",
     "taskDoneMessage": "Awesome work! You earned +{points} points for keeping your home up to date! 🌿",
-    "failedToComplete": "Failed to complete task. Please try again."
+    "failedToComplete": "Failed to complete task. Please try again"
   },
   "catalogScreen": {
-    "heroTitle": "Chore Catalog",
-    "heroSubtitle": "Customize your household routine by activating or adding tasks.",
+    "heroTitle": "Chore List",
+    "heroSubtitle": "Customize your household routine by activating or adding tasks",
     "heroActive": "Active",
-    "searchPlaceholder": "Search chores catalog...",
+    "searchPlaceholder": "Search chores list..",
     "filterAll": "All",
     "filterActive": "Active",
     "filterInactive": "Inactive",
     "filterCustom": "Custom",
     "emptyTitle": "No Chores Found",
-    "emptySubtitle": "Try clearing your search or selecting a different filter.",
+    "emptySubtitle": "Try clearing your search or selecting a different filter",
     "newChoreFab": "New Chore"
   },
   "highscoresScreen": {
@@ -127,7 +127,7 @@
     "podiumGlobalTitle": "🌍 Global Leaderboard",
     "podiumHouseholdTitle": "🏆 Household Leaderboard",
     "pts": "pts",
-    "emptyText": "No rankings recorded yet.",
+    "emptyText": "No rankings recorded yet",
     "leaveTitle": "Leave Household",
     "leaveMessage": "Are you sure you want to disconnect from this household?",
     "leaveConfirm": "Leave"
@@ -141,10 +141,10 @@
       "customDaysLabel": "Or enter custom number of days:",
       "customDaysPlaceholder": "Custom days (e.g. 45)",
       "createButton": "Create Task",
-      "creatingButton": "Creating...",
-      "pleaseEnterTaskName": "Please enter a task name.",
-      "pleaseEnterValidDays": "Please enter a valid number of days.",
-      "failedToCreateTask": "Failed to create task. Please try again."
+      "creatingButton": "Creating..",
+      "pleaseEnterTaskName": "Please enter a task name",
+      "pleaseEnterValidDays": "Please enter a valid number of days",
+      "failedToCreateTask": "Failed to create task. Please try again"
     },
     "editTask": {
       "title": "Edit Task",
@@ -157,11 +157,11 @@
       "yesterday": "Yesterday",
       "twoDaysAgo": "2 days ago",
       "saveChangesButton": "Save Changes",
-      "savingButton": "Saving...",
+      "savingButton": "Saving..",
       "deleteCustomTaskButton": "Delete Custom Task",
-      "taskNameEmpty": "Task name cannot be empty.",
-      "pleaseEnterValidDays": "Please enter a valid number of days.",
-      "failedToSave": "Failed to save changes.",
+      "taskNameEmpty": "Task name cannot be empty",
+      "pleaseEnterValidDays": "Please enter a valid number of days",
+      "failedToSave": "Failed to save changes",
       "deleteTaskTitle": "Delete Task",
       "deleteTaskConfirm": "Are you sure you want to permanently delete \"{name}\"?",
       "delete": "Delete"
@@ -172,7 +172,7 @@
       "pts": "pts",
       "completedSingle": "Completed 1 time",
       "completedPlural": "Completed {count} times",
-      "emptyText": "No completed task statistics recorded yet."
+      "emptyText": "No completed task statistics recorded yet"
     },
     "baseModal": {
       "close": "Close modal"
@@ -206,6 +206,6 @@
   "notifications": {
     "reminderTitle": "🏠 Housekeeping Reminder",
     "overdueBody": "You have {count} overdue housekeeping task(s)!",
-    "dueTodayBody": "You have {count} task(s) due today."
+    "dueTodayBody": "You have {count} task(s) due today"
   }
 }

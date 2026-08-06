@@ -15,10 +15,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useHousehold } from '../src/context/HouseholdContext';
 import { Household } from '../src/types';
 import { Colors } from '../src/theme/colors';
-import i18n, { t } from '../src/i18n';
+import { useLanguage } from '../src/i18n';
+import { LanguageToggle } from '../src/components/LanguageToggle';
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { i18n, t } = useLanguage();
   const {
     userName,
     recentHouseholds,
@@ -142,6 +144,10 @@ export default function OnboardingScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.topHeaderBar}>
+          <LanguageToggle />
+        </View>
+
         <View style={styles.headerIcon}>
           <Ionicons name="home" size={48} color={Colors.primaryLight} />
         </View>
@@ -480,6 +486,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     marginTop: 8,
+  },
+  topHeaderBar: {
+    alignItems: 'flex-end',
+    marginBottom: 8,
   },
   backButtonText: {
     color: Colors.textSecondary,

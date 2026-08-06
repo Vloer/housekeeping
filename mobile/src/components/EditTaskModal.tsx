@@ -4,9 +4,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { BaseModal } from './common/BaseModal';
 import { Colors } from '../theme/colors';
-import { FREQUENCY_PRESETS } from '../types';
+import { getFrequencyPresets } from '../types';
 import { formatDate } from '../utils/dateUtils';
-import i18n, { t, getTaskName } from '../i18n';
+import { useLanguage } from '../i18n';
 
 interface EditTaskData {
   catalogTaskId: number;
@@ -39,6 +39,9 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   onSave,
   onDelete,
 }) => {
+  const { i18n, t, getTaskName } = useLanguage();
+  const presets = getFrequencyPresets(i18n);
+
   const [name, setName] = useState('');
   const [frequencyDays, setFrequencyDays] = useState(30);
   const [customDaysInput, setCustomDaysInput] = useState('');
@@ -49,7 +52,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   useEffect(() => {
     if (taskData) {
       setName(getTaskName(taskData.name));
-      const isPreset = FREQUENCY_PRESETS.some((opt) => opt.days === taskData.frequencyDays);
+      const isPreset = presets.some((opt) => opt.days === taskData.frequencyDays);
       if (isPreset) {
         setFrequencyDays(taskData.frequencyDays);
         setCustomDaysInput('');
@@ -150,11 +153,11 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 
       <Text style={styles.label}>{i18n.modals.editTask.repeatFrequencyLabel}</Text>
       <View style={styles.chipRow}>
-        {FREQUENCY_PRESETS.map((option) => {
+        {presets.map((option) => {
           const isSelected = frequencyDays === option.days && !customDaysInput;
           return (
             <TouchableOpacity
-              key={option.label}
+              key={option.days}
               style={[styles.chip, isSelected && styles.chipSelected]}
               onPress={() => {
                 setFrequencyDays(option.days);

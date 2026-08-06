@@ -8,12 +8,13 @@ import { UserStatsModal } from '../../src/components/UserStatsModal';
 import { HighscoreEntry } from '../../src/types';
 import { getGlobalHighscores } from '../../src/services/api';
 import { Colors } from '../../src/theme/colors';
-import i18n from '../../src/i18n';
+import { useLanguage } from '../../src/i18n';
 
 type TabMode = 'HOUSEHOLD' | 'GLOBAL';
 
 export default function HighscoresScreen() {
   const router = useRouter();
+  const { i18n } = useLanguage();
   const { household, userUuid, highscores: householdHighscores, leaveHousehold } = useHousehold();
   
   const [tabMode, setTabMode] = useState<TabMode>('HOUSEHOLD');
