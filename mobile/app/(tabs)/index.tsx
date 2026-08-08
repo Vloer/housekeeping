@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useHousehold } from '../../src/context/HouseholdContext';
@@ -8,10 +8,11 @@ import { ActiveTask } from '../../src/types';
 import { Colors } from '../../src/theme/colors';
 import { getTodayStr, getIn7DaysStr, getThisWeekBounds } from '../../src/utils/dateUtils';
 import { useLanguage } from '../../src/i18n';
+import { sendTestNotification } from '../../src/services/notifications';
 
 export default function ActiveTasksScreen() {
   const router = useRouter();
-  const { i18n, t } = useLanguage();
+  const { i18n, t, getTaskName } = useLanguage();
   const {
     household,
     activeTasks,
@@ -37,17 +38,47 @@ export default function ActiveTasksScreen() {
   const handleCompleteTask = useCallback(
     async (taskId: number) => {
       try {
+        const task = activeTasks.find((item) => item.id === taskId);
+        const taskName = task ? getTaskName(task.task_name) : 'Task';
         const result = await markTaskDoneOptimistic(taskId);
+
+        const messages = (i18n.activeTasksScreen as any).casualTaskDoneMessages as string[] | undefined;
+        const randomTemplate = messages && messages.length > 0
+          ? messages[Math.floor(Math.random() * messages.length)]
+          : i18n.activeTasksScreen.taskDoneMessage;
+
         Alert.alert(
           i18n.activeTasksScreen.taskDoneTitle,
-          t(i18n.activeTasksScreen.taskDoneMessage, { points: result.points })
+          t(randomTemplate, { task: taskName, points: result.points })
         );
       } catch (err) {
         Alert.alert(i18n.onboarding.errorTitle, i18n.activeTasksScreen.failedToComplete);
       }
     },
-    [markTaskDoneOptimistic]
+    [activeTasks, getTaskName, i18n, markTaskDoneOptimistic, t]
   );
+
+  const handleTestNotificationPress = useCallback(() => {
+    Alert.alert(
+      i18n.notifications.testTitle,
+      i18n.notifications.testMessage,
+      [
+        { text: i18n.onboarding.cancel, style: 'cancel' },
+        {
+          text: i18n.notifications.sendDaily,
+          onPress: async () => {
+            await sendTestNotification(activeTasks, false, i18n);
+          },
+        },
+        {
+          text: i18n.notifications.sendWeekly,
+          onPress: async () => {
+            await sendTestNotification(activeTasks, true, i18n);
+          },
+        },
+      ]
+    );
+  }, [activeTasks, i18n]);
 
   const todayStr = getTodayStr();
   const in7DaysStr = getIn7DaysStr();
@@ -199,6 +230,15 @@ export default function ActiveTasksScreen() {
                 ]}
               />
             </View>
+
+            <TouchableOpacity
+              style={styles.testNotificationBtn}
+              onPress={handleTestNotificationPress}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="notifications-outline" size={15} color={Colors.primary} />
+              <Text style={styles.testNotificationBtnText}>{i18n.notifications.testButton}</Text>
+            </TouchableOpacity>
           </View>
         }
         renderItem={renderTaskItem}
@@ -234,7 +274,6 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 16,
-    paddingBottom: 32,
   },
   summaryCard: {
     backgroundColor: Colors.surface,
@@ -295,6 +334,22 @@ const styles = StyleSheet.create({
   progressBarFill: {
     height: '100%',
     borderRadius: 4,
+  },
+  testNotificationBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primarySoft,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginTop: 14,
+    gap: 6,
+  },
+  testNotificationBtnText: {
+    color: Colors.primary,
+    fontSize: 13,
+    fontWeight: '700',
   },
   emptyState: {
     alignItems: 'center',

@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CatalogTask } from '../types';
 import { Colors } from '../theme/colors';
@@ -8,24 +8,21 @@ import { useLanguage } from '../i18n';
 interface CatalogItemCardProps {
   task: CatalogTask;
   onToggleActive: (task: CatalogTask) => void;
+  onEdit: (task: CatalogTask) => void;
   onDelete?: (taskId: number) => void;
-  onLongPress?: (task: CatalogTask) => void;
 }
 
 const CatalogItemCardComponent: React.FC<CatalogItemCardProps> = ({
   task,
   onToggleActive,
+  onEdit,
   onDelete,
-  onLongPress,
 }) => {
   const { i18n, t, getTaskName } = useLanguage();
+
   return (
-    <TouchableOpacity
-      style={[styles.card, task.is_active && styles.cardActive]}
-      activeOpacity={0.92}
-      onLongPress={() => onLongPress?.(task)}
-    >
-      {/* Status Pillar Indicator Bar */}
+    <View style={[styles.card, task.is_active && styles.cardActive]}>
+      {/* Status Strip Indicator */}
       <View style={[styles.statusStrip, task.is_active ? styles.statusStripActive : styles.statusStripInactive]} />
 
       <View style={styles.content}>
@@ -34,63 +31,72 @@ const CatalogItemCardComponent: React.FC<CatalogItemCardProps> = ({
           <Text style={styles.name} numberOfLines={1}>{getTaskName(task.name)}</Text>
           {task.is_custom && (
             <View style={styles.customBadge}>
-              <Ionicons name="sparkles" size={10} color={Colors.accent} style={{ marginRight: 3 }} />
+              <Ionicons name="sparkles" size={10} color={Colors.accent} style={{ marginRight: 2 }} />
               <Text style={styles.customBadgeText}>{i18n.components.catalogItemCard.custom}</Text>
             </View>
           )}
         </View>
 
-        {/* Frequency Subheader */}
+        {/* Uncluttered Meta Row: Frequency & Last Done Summary */}
         <View style={styles.metaRow}>
-          <View style={styles.freqBadge}>
-            <Ionicons name="repeat" size={12} color={Colors.primary} style={{ marginRight: 4 }} />
-            <Text style={styles.freqText}>{t(i18n.components.catalogItemCard.everyDays, { days: task.frequency_days })}</Text>
-          </View>
-
-          {task.is_active && (
-            <View style={styles.activePill}>
-              <View style={styles.activeDot} />
-              <Text style={styles.activePillText}>{i18n.components.catalogItemCard.activeChore}</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Dates Row */}
-        <View style={styles.datesRow}>
-          <View style={styles.dateChip}>
-            <Text style={styles.dateLabel}>{i18n.components.catalogItemCard.lastDone}</Text>
-            <Text style={styles.dateValue}>{task.last_done_date || i18n.components.catalogItemCard.never}</Text>
-          </View>
-
-          <View style={styles.dateChip}>
-            <Text style={styles.dateLabel}>{i18n.components.catalogItemCard.nextDue}</Text>
-            <Text style={[styles.dateValue, task.is_active && styles.dateValueActive]}>
-              {task.is_active ? (task.due_date || i18n.components.catalogItemCard.na) : i18n.components.catalogItemCard.inactive}
-            </Text>
-          </View>
+          <Text style={styles.freqText}>
+            {t(i18n.components.catalogItemCard.everyDays, { days: task.frequency_days })}
+          </Text>
+          <Text style={styles.metaDot}>•</Text>
+          <Text style={styles.dateText}>
+            {i18n.components.catalogItemCard.lastDone} {task.last_done_date || i18n.components.catalogItemCard.never}
+          </Text>
         </View>
       </View>
 
-      {/* Switch & Action Controls */}
-      <View style={styles.actionColumn}>
-        <Switch
-          value={task.is_active}
-          onValueChange={() => onToggleActive(task)}
-          trackColor={{ false: '#E2E8F0', true: Colors.primary }}
-          thumbColor={task.is_active ? '#FFFFFF' : '#CBD5E1'}
-        />
-        {task.is_custom && onDelete && (
-          <TouchableOpacity
-            onPress={() => onDelete(task.id)}
-            style={styles.deleteButton}
-            accessibilityLabel={t(i18n.components.catalogItemCard.deleteTaskAccess, { name: task.name })}
-            accessibilityRole="button"
-          >
-            <Ionicons name="trash-outline" size={16} color={Colors.danger} />
-          </TouchableOpacity>
-        )}
+      {/* 3 Icon-Only Action Buttons: Activate, Change, Delete */}
+      <View style={styles.actionRow}>
+        {/* 1. Activate Button */}
+        <TouchableOpacity
+          style={[styles.iconButton, task.is_active ? styles.activateBtnActive : styles.activateBtnInactive]}
+          onPress={() => onToggleActive(task)}
+          activeOpacity={0.7}
+          accessibilityLabel={task.is_active ? "Deactivate chore" : "Activate chore"}
+          accessibilityRole="button"
+        >
+          <Ionicons
+            name={task.is_active ? "checkmark-circle" : "checkmark-circle-outline"}
+            size={18}
+            color={task.is_active ? Colors.primary : Colors.textMuted}
+          />
+        </TouchableOpacity>
+
+        {/* 2. Change (Edit) Button */}
+        <TouchableOpacity
+          style={[styles.iconButton, styles.changeBtn]}
+          onPress={() => onEdit(task)}
+          activeOpacity={0.7}
+          accessibilityLabel="Edit chore"
+          accessibilityRole="button"
+        >
+          <Ionicons name="create-outline" size={18} color={Colors.secondary} />
+        </TouchableOpacity>
+
+        {/* 3. Delete Button (Disabled and greyed out for preinstalled tasks) */}
+        <TouchableOpacity
+          style={[
+            styles.iconButton,
+            task.is_custom ? styles.deleteBtnActive : styles.deleteBtnDisabled,
+          ]}
+          onPress={() => task.is_custom && onDelete?.(task.id)}
+          disabled={!task.is_custom}
+          activeOpacity={0.7}
+          accessibilityLabel={t(i18n.components.catalogItemCard.deleteTaskAccess, { name: task.name })}
+          accessibilityRole="button"
+        >
+          <Ionicons
+            name="trash-outline"
+            size={18}
+            color={task.is_custom ? Colors.danger : '#94A3B8'}
+          />
+        </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 
@@ -101,23 +107,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surface,
-    borderRadius: 18,
-    marginBottom: 12,
+    borderRadius: 16,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: Colors.border,
     overflow: 'hidden',
     shadowColor: Colors.shadowColor,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 2,
   },
   cardActive: {
-    borderColor: 'rgba(26, 83, 92, 0.25)',
+    borderColor: 'rgba(26, 83, 92, 0.22)',
     backgroundColor: '#FFFFFF',
   },
   statusStrip: {
-    width: 5,
+    width: 4,
     height: '100%',
   },
   statusStripActive: {
@@ -128,17 +134,17 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
+    gap: 6,
+    marginBottom: 4,
   },
   name: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: Colors.text,
     flexShrink: 1,
@@ -147,95 +153,69 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.accentSoft,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: 'rgba(244, 162, 97, 0.3)',
   },
   customBadgeText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
     color: Colors.accent,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  freqBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.primarySoft,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
+    gap: 6,
   },
   freqText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: Colors.primary,
   },
-  activePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.secondarySoft,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  activeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.secondary,
-    marginRight: 4,
-  },
-  activePillText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: Colors.secondary,
-  },
-  datesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  dateChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  dateLabel: {
-    fontSize: 10,
-    fontWeight: '700',
+  metaDot: {
+    fontSize: 12,
     color: Colors.textMuted,
-    marginRight: 4,
   },
-  dateValue: {
-    fontSize: 11,
-    fontWeight: '600',
+  dateText: {
+    fontSize: 12,
+    fontWeight: '500',
     color: Colors.textSecondary,
   },
-  dateValueActive: {
-    color: Colors.primary,
-    fontWeight: '700',
-  },
-  actionColumn: {
+  actionRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingRight: 14,
-    gap: 8,
+    paddingRight: 10,
+    gap: 6,
   },
-  deleteButton: {
-    padding: 6,
-    borderRadius: 8,
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  activateBtnActive: {
+    backgroundColor: Colors.primarySoft,
+    borderColor: 'rgba(26, 83, 92, 0.2)',
+  },
+  activateBtnInactive: {
+    backgroundColor: Colors.surfaceSoft,
+    borderColor: Colors.border,
+  },
+  changeBtn: {
+    backgroundColor: Colors.secondarySoft,
+    borderColor: 'rgba(42, 157, 143, 0.2)',
+  },
+  deleteBtnActive: {
     backgroundColor: Colors.dangerSoft,
+    borderColor: 'rgba(230, 57, 70, 0.2)',
+  },
+  deleteBtnDisabled: {
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
+    opacity: 0.4,
   },
 });

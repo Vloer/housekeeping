@@ -102,9 +102,21 @@
     "thisWeek": "This Week",
     "emptyTitle": "Your Home is Sparkling!",
     "emptySubtitle": "No tasks due right now. Sit back and enjoy your clean home, or activate tasks from the list tab",
-    "taskDoneTitle": "Task Done! 🎉",
+    "taskDoneTitle": "Task done! 🎉",
     "taskDoneMessage": "Awesome work! You earned +{points} points for keeping your home up to date! 🌿",
-    "failedToComplete": "Failed to complete task. Please try again"
+    "failedToComplete": "Failed to complete task. Please try again",
+    "casualTaskDoneMessages": [
+      "{task} completed, well done lad (+{points} pts)",
+      "{task} completed slower than my grandma would've done it (+{points} pts)",
+      "Holy crap, you actually finished {task}! Didn't think you had it in you (+{points} pts)",
+      "{task} is finally out of the way. Somebody get this absolute legend a medal! (+{points} pts)",
+      "Boom! {task} conquered. Now don't celebrate too hard, alright? (+{points} pts)",
+      "Look at you go! {task} is crushed. Who are you and what did you do with the lazy guy? (+{points} pts)",
+      "{task} checked off! Mr. Clean himself couldn't have done it faster (+{points} pts)",
+      "{task} done and dusted. Honestly expected you to give up halfway (+{points} pts)",
+      "Sweet victory! {task} is complete. Take a bow, champ (+{points} pts)",
+      "{task} handled like a pro. Now go take a well-deserved nap (+{points} pts)"
+    ]
   },
   "catalogScreen": {
     "heroTitle": "Chore List",
@@ -206,6 +218,16 @@
   "notifications": {
     "reminderTitle": "🏠 Housekeeping Reminder",
     "overdueBody": "You have {count} overdue housekeeping task(s)!",
-    "dueTodayBody": "You have {count} task(s) due today"
+    "dueTodayBody": "You have {count} task(s) due today",
+    "overdueCount": "Overdue tasks: {count}",
+    "dueTodayTasks": "Due today: {tasks}",
+    "dueThisWeekTasks": "Due this week: {tasks}",
+    "testButton": "Test Notification",
+    "testTitle": "Send Test Notification",
+    "testMessage": "Choose notification type to send immediately:",
+    "sendDaily": "Send Daily Notification",
+    "sendWeekly": "Send Weekly Notification (Monday)",
+    "sentSuccessTitle": "Notification Sent! 🔔",
+    "sentSuccessMessage": "Check your device notification tray to preview the notification."
   }
 }

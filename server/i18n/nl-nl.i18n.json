@@ -104,7 +104,19 @@
     "emptySubtitle": "Geen taken die nu gedaan moeten worden. Ontspan of activeer taken via het lijst tabblad",
     "taskDoneTitle": "Taak Voltooid! 🎉",
     "taskDoneMessage": "Geweldig werk! Je hebt +{points} punten verdiend! 🌿",
-    "failedToComplete": "Taak voltooien mislukt. Probeer het opnieuw"
+    "failedToComplete": "Taak voltooien mislukt. Probeer het opnieuw",
+    "casualTaskDoneMessages": [
+      "{task} voltooid, lekker gewerkt pik (+{points} ptn)",
+      "{task} gedaan, langzamer dan m'n oma het had gedaan maar het telt (+{points} ptn)",
+      "Zo dan, je hebt {task} echt afgekregen! Dacht eerlijk gezegd niet dat je het in je had (+{points} ptn)",
+      "{task} is eindelijk gefixt. Geef deze lugubere eindbaas een medaille! (+{points} ptn)",
+      "Boem! {task} gecrusht. Nu niet gaan opscheppen he? (+{points} ptn)",
+      "Kiekt um goan! {task} is geregeld. Wie ben jij en wat heb je met die luie gast gedaan? (+{points} ptn)",
+      "{task} afgevinkt! Kneiter ziek (+{points} ptn)",
+      "{task} gedaan en afgevinkt. Verwachtte eigenlijk dat je halverwege op zou geven (+{points} ptn)",
+      "Lekker bezig! {task} is klaar. Neem maar een diepe buiging, held (+{points} ptn)",
+      "Atta boy, {task} done. Tijd om te gaan pitten (+{points} ptn)"
+    ]
   },
   "catalogScreen": {
     "heroTitle": "Takenlijst",
@@ -206,6 +218,16 @@
   "notifications": {
     "reminderTitle": "🏠 Huishouden Herinnering",
     "overdueBody": "Je hebt {count} verlopen huishoudtaak/taken!",
-    "dueTodayBody": "Je hebt {count} taak/taken die vandaag gedaan moeten worden"
+    "dueTodayBody": "Je hebt {count} taak/taken die vandaag gedaan moeten worden",
+    "overdueCount": "Verlopen taken: {count}",
+    "dueTodayTasks": "Vandaag doen: {tasks}",
+    "dueThisWeekTasks": "Deze week doen: {tasks}",
+    "testButton": "Test Notificatie",
+    "testTitle": "Test Notificatie Versturen",
+    "testMessage": "Kies het type notificatie om direct te versturen:",
+    "sendDaily": "Dagelijkse Notificatie Versturen",
+    "sendWeekly": "Wekelijkse Notificatie Versturen (Maandag)",
+    "sentSuccessTitle": "Notificatie Verzonden! 🔔",
+    "sentSuccessMessage": "Bekijk je notificaties op je toestel voor het resultaat."
   }
 }

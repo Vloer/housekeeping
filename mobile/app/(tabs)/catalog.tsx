@@ -107,16 +107,20 @@ export default function CatalogScreen() {
     ? (editingTask.last_done_date || activeTaskForEditing?.last_done_date || null)
     : null;
 
+  const handleTaskEdit = useCallback((task: CatalogTask) => {
+    setEditingTask(task);
+  }, []);
+
   const renderCatalogItem = useCallback(
     ({ item }: { item: CatalogTask }) => (
       <CatalogItemCard
         task={item}
         onToggleActive={handleToggleActive}
+        onEdit={handleTaskEdit}
         onDelete={handleDeleteTask}
-        onLongPress={handleTaskLongPress}
       />
     ),
-    [handleToggleActive, handleDeleteTask, handleTaskLongPress]
+    [handleToggleActive, handleTaskEdit, handleDeleteTask]
   );
 
   const keyExtractor = useCallback((item: CatalogTask) => item.id.toString(), []);
