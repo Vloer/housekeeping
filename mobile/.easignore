@@ -1,0 +1,15 @@
+# EAS Ignore file
+.expo/
+dist/
+web-build/
+node_modules/
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Include local native android directory so EAS Cloud uses exact working AndroidManifest.xml
+!android

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { Alert } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { Household, ActiveTask, CatalogTask, HighscoreEntry } from '../types';
 import * as api from '../services/api';
@@ -105,8 +106,10 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setCatalogTasks(catalog);
         setHighscores(scores);
         scheduleDailyTaskReminder(active);
-      } catch (err) {
-        console.error('Error refreshing data from server:', err);
+      } catch (err: any) {
+        const errorMsg = api.getApiErrorMessage(err);
+        console.error('Error refreshing data from server:', errorMsg);
+        Alert.alert('Connection / Auth Error', errorMsg);
       } finally {
         setLoading(false);
         inFlightRefreshPromiseRef.current = null;
@@ -143,37 +146,55 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const checkJoinHousehold = async (joinCode: string) => {
-    return await api.checkJoinHousehold(joinCode, userUuid);
+    try {
+      return await api.checkJoinHousehold(joinCode, userUuid);
+    } catch (err: any) {
+      const errorMsg = api.getApiErrorMessage(err);
+      Alert.alert('Connection / Auth Error', errorMsg);
+      throw err;
+    }
   };
 
   const createHousehold = async (name: string, uName: string) => {
-    let uuid = userUuid;
-    if (!uuid) {
-      uuid = Crypto.randomUUID();
-      setUserUuid(uuid);
-      await storageService.setUserUuid(uuid);
+    try {
+      let uuid = userUuid;
+      if (!uuid) {
+        uuid = Crypto.randomUUID();
+        setUserUuid(uuid);
+        await storageService.setUserUuid(uuid);
+      }
+      const res = await api.createHousehold(name, uName, uuid);
+      setHousehold(res);
+      setUserName(uName);
+      await storageService.setHousehold(res);
+      await storageService.setUserName(uName);
+      await saveToRecentHouseholds(res);
+    } catch (err: any) {
+      const errorMsg = api.getApiErrorMessage(err);
+      Alert.alert('Connection / Auth Error', errorMsg);
+      throw err;
     }
-    const res = await api.createHousehold(name, uName, uuid);
-    setHousehold(res);
-    setUserName(uName);
-    await storageService.setHousehold(res);
-    await storageService.setUserName(uName);
-    await saveToRecentHouseholds(res);
   };
 
   const joinHousehold = async (joinCode: string, uName: string) => {
-    let uuid = userUuid;
-    if (!uuid) {
-      uuid = Crypto.randomUUID();
-      setUserUuid(uuid);
-      await storageService.setUserUuid(uuid);
+    try {
+      let uuid = userUuid;
+      if (!uuid) {
+        uuid = Crypto.randomUUID();
+        setUserUuid(uuid);
+        await storageService.setUserUuid(uuid);
+      }
+      const res = await api.joinHousehold(joinCode, uName, uuid);
+      setHousehold(res);
+      setUserName(res.username);
+      await storageService.setHousehold(res);
+      await storageService.setUserName(res.username);
+      await saveToRecentHouseholds(res);
+    } catch (err: any) {
+      const errorMsg = api.getApiErrorMessage(err);
+      Alert.alert('Connection / Auth Error', errorMsg);
+      throw err;
     }
-    const res = await api.joinHousehold(joinCode, uName, uuid);
-    setHousehold(res);
-    setUserName(res.username);
-    await storageService.setHousehold(res);
-    await storageService.setUserName(res.username);
-    await saveToRecentHouseholds(res);
   };
 
   const connectRecentHousehold = async (h: Household) => {

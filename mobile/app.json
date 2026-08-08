@@ -27,8 +27,15 @@
     },
     "plugins": [
       "expo-router",
-      "expo-status-bar"
+      "expo-status-bar",
+      "./plugins/withCleartext.js"
     ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/117498aa-db4b-42ea-a414-4e25cec74f6c"
+    },
     "extra": {
       "router": {},
       "eas": {

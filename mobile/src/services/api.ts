@@ -4,11 +4,7 @@ import { CatalogTask, ActiveTask, Household, HighscoreEntry, UserTaskStat } from
 
 // Determine Base URL and normalize so /api/ endpoints join cleanly
 const getBaseUrl = (): string => {
-  let url = process.env.API_URL || Constants.expoConfig?.extra?.apiUrl;
-  
-  if (!url) {
-    url = 'http://62.238.4.160:8000/api';
-  }
+  let url = process.env.EXPO_PUBLIC_API_URL || process.env.API_URL || Constants.expoConfig?.extra?.apiUrl;
 
   // Strip trailing slashes
   url = url.replace(/\/+$/, '');
@@ -22,7 +18,7 @@ const getBaseUrl = (): string => {
 };
 
 const getAuthToken = (): string => {
-  return process.env.AUTH_TOKEN || process.env.AUTH_TOKEN || 'hk_secret_token_2026';
+  return process.env.EXPO_PUBLIC_AUTH_TOKEN || process.env.AUTH_TOKEN;
 };
 
 const BASE_URL = getBaseUrl();
@@ -39,17 +35,45 @@ export const apiClient = axios.create({
   timeout: 10000,
 });
 
-// Response Interceptor: Log errors only
+export const getApiErrorMessage = (error: any): string => {
+  if (!error) return 'An unknown error occurred.';
+
+  const targetUrl = apiClient.defaults.baseURL || 'server';
+
+  if (error.response) {
+    const status = error.response.status;
+    const detail = error.response.data?.detail || error.response.data?.message;
+
+    if (status === 401 || status === 403) {
+      return `Authentication Error (${status}): Invalid or missing authorization token. Please check EXPO_PUBLIC_AUTH_TOKEN.${detail ? ` Details: ${detail}` : ''}`;
+    }
+    if (status === 404) {
+      return `API Endpoint Not Found (404): Tried '${targetUrl}${error.config?.url || ''}'. Check EXPO_PUBLIC_API_URL setting.${detail ? ` Details: ${detail}` : ''}`;
+    }
+    if (status >= 500) {
+      return `Server Internal Error (${status}): '${targetUrl}'. ${detail || 'Please check backend server logs.'}`;
+    }
+    return detail || `HTTP Request Failed (${status}).`;
+  }
+
+  if (error.request || error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED') {
+    const fullAttemptedUrl = `${targetUrl}${error.config?.url || ''}`;
+    const envSetting = process.env.EXPO_PUBLIC_API_URL || 'NOT_SET';
+    return `Server Connection Failed: Unable to reach '${fullAttemptedUrl}'. [Configured EXPO_PUBLIC_API_URL: ${envSetting}]. Check server availability or phone network.`;
+  }
+
+  return error.message || 'An unexpected network error occurred.';
+};
+
+// Response Interceptor: Format error messages & log
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response) {
-      console.error(`[HTTP Server Error] ${error.response.status} <- ${error.config?.url}:`, JSON.stringify(error.response.data));
-    } else if (error.request) {
-      console.error(`[HTTP Network Error] Unable to connect to ${apiClient.defaults.baseURL}${error.config?.url}. Check server connectivity.`);
-    } else {
-      console.error('[HTTP Error]', error.message);
+    const userMsg = getApiErrorMessage(error);
+    if (error) {
+      error.userFacingMessage = userMsg;
     }
+    console.error(`[HTTP Error] ${userMsg}`);
     return Promise.reject(error);
   }
 );
