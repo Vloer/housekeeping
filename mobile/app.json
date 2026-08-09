@@ -33,7 +33,8 @@
     "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/117498aa-db4b-42ea-a414-4e25cec74f6c",
-      "enabled": true
+      "enabled": true,
+      "fallbackToCacheTimeout": 3000
     },
     "extra": {
       "router": {},

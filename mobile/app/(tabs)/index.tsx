@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useHousehold } from '../../src/context/HouseholdContext';
@@ -8,7 +8,6 @@ import { ActiveTask } from '../../src/types';
 import { Colors } from '../../src/theme/colors';
 import { getTodayStr, getIn7DaysStr, getThisWeekBounds } from '../../src/utils/dateUtils';
 import { useLanguage } from '../../src/i18n';
-import { sendTestNotification } from '../../src/services/notifications';
 
 export default function ActiveTasksScreen() {
   const router = useRouter();
@@ -57,28 +56,6 @@ export default function ActiveTasksScreen() {
     },
     [activeTasks, getTaskName, i18n, markTaskDoneOptimistic, t]
   );
-
-  const handleTestNotificationPress = useCallback(() => {
-    Alert.alert(
-      i18n.notifications.testTitle,
-      i18n.notifications.testMessage,
-      [
-        { text: i18n.onboarding.cancel, style: 'cancel' },
-        {
-          text: i18n.notifications.sendDaily,
-          onPress: async () => {
-            await sendTestNotification(activeTasks, false, i18n);
-          },
-        },
-        {
-          text: i18n.notifications.sendWeekly,
-          onPress: async () => {
-            await sendTestNotification(activeTasks, true, i18n);
-          },
-        },
-      ]
-    );
-  }, [activeTasks, i18n]);
 
   const todayStr = getTodayStr();
   const in7DaysStr = getIn7DaysStr();
@@ -230,15 +207,6 @@ export default function ActiveTasksScreen() {
                 ]}
               />
             </View>
-
-            <TouchableOpacity
-              style={styles.testNotificationBtn}
-              onPress={handleTestNotificationPress}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="notifications-outline" size={15} color={Colors.primary} />
-              <Text style={styles.testNotificationBtnText}>{i18n.notifications.testButton}</Text>
-            </TouchableOpacity>
           </View>
         }
         renderItem={renderTaskItem}
@@ -334,22 +302,6 @@ const styles = StyleSheet.create({
   progressBarFill: {
     height: '100%',
     borderRadius: 4,
-  },
-  testNotificationBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primarySoft,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    marginTop: 14,
-    gap: 6,
-  },
-  testNotificationBtnText: {
-    color: Colors.primary,
-    fontSize: 13,
-    fontWeight: '700',
   },
   emptyState: {
     alignItems: 'center',

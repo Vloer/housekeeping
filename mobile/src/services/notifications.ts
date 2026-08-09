@@ -109,39 +109,4 @@ export const scheduleDailyTaskReminder = async (activeTasks: ActiveTask[]) => {
   }
 };
 
-export const sendTestNotification = async (
-  activeTasks: ActiveTask[],
-  isWeekly: boolean,
-  activeI18n: typeof i18n = i18n
-): Promise<boolean> => {
-  if (isExpoGo) {
-    console.log('Expo Go detected: notification trigger skipped.');
-    return true;
-  }
-  try {
-    const hasPermission = await requestNotificationPermissions();
-    if (!hasPermission) {
-      return false;
-    }
-
-    const body = buildNotificationBody(activeTasks, isWeekly, activeI18n);
-    const fallbackBody = isWeekly
-      ? t(activeI18n.notifications.dueThisWeekTasks, { tasks: '-' })
-      : t(activeI18n.notifications.dueTodayTasks, { tasks: '-' });
-
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: activeI18n.notifications.reminderTitle,
-        body: body || fallbackBody,
-        sound: true,
-      },
-      trigger: null,
-    });
-    return true;
-  } catch (err) {
-    console.warn('Failed to send test notification:', err);
-    return false;
-  }
-};
-
 
