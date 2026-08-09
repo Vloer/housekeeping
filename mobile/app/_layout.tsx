@@ -1,11 +1,28 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as Updates from 'expo-updates';
 import { HouseholdProvider } from '../src/context/HouseholdContext';
 import { Colors } from '../src/theme/colors';
 import i18n, { LanguageProvider } from '../src/i18n';
 
 export default function RootLayout() {
+    useEffect(() => {
+        async function onFetchUpdateAsync() {
+          try {
+            const update = await Updates.checkForUpdateAsync();
+            if (update.isAvailable) {
+              await Updates.fetchUpdateAsync();
+              await Updates.reloadAsync();
+            }
+          } catch (error) {
+            console.log(`Error fetching latest update: ${error}`);
+          }
+        }
+
+        onFetchUpdateAsync();
+      }, []);
+
   return (
     <LanguageProvider>
       <HouseholdProvider>
