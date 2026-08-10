@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../theme/colors';
-import i18n from '../../i18n';
+import { useLanguage } from '../../i18n';
 
 interface BaseModalProps {
   visible: boolean;
@@ -22,6 +22,7 @@ interface BaseModalProps {
 }
 
 export const BaseModal: React.FC<BaseModalProps> = ({ visible, title, onClose, children }) => {
+  const { i18n } = useLanguage();
   const insets = useSafeAreaInsets();
   const bottomMargin = Math.max(insets.bottom + 10, 14);
 

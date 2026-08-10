@@ -19,9 +19,9 @@ export function t(template: string, params: Record<string, string | number>): st
  * Translates snake_case task keys (e.g., "coffee_machine") to human-readable strings ("Coffee machine").
  * Fallback to original string if key is not found in i18n.tasks (e.g., custom tasks).
  */
-export function getTaskName(nameOrKey: string): string {
-  if (i18n.tasks && (i18n.tasks as Record<string, string>)[nameOrKey]) {
-    return (i18n.tasks as Record<string, string>)[nameOrKey];
+export function getTaskName(nameOrKey: string, targetI18n: typeof i18nData = i18nData): string {
+  if (targetI18n && targetI18n.tasks && (targetI18n.tasks as Record<string, string>)[nameOrKey]) {
+    return (targetI18n.tasks as Record<string, string>)[nameOrKey];
   }
   return nameOrKey;
 }

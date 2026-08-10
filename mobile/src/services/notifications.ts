@@ -49,7 +49,7 @@ export const buildNotificationBody = (
   const overdueCount = activeTasks.filter((t) => t.days_overdue > 0).length;
 
   const dueTodayTasks = activeTasks.filter((t) => t.days_overdue === 0);
-  const dueTodayNames = dueTodayTasks.map((t) => getTaskName(t.task_name));
+  const dueTodayNames = dueTodayTasks.map((t) => getTaskName(t.task_name, activeI18n));
 
   const now = new Date();
   const isMonday = forceMonday !== undefined ? forceMonday : now.getDay() === 1;
@@ -60,7 +60,7 @@ export const buildNotificationBody = (
     const dueThisWeekTasks = activeTasks.filter(
       (t) => t.due_date && t.due_date >= mondayStr && t.due_date <= sundayStr
     );
-    dueThisWeekNames = dueThisWeekTasks.map((t) => getTaskName(t.task_name));
+    dueThisWeekNames = dueThisWeekTasks.map((t) => getTaskName(t.task_name, activeI18n));
   }
 
   const lines: string[] = [];

@@ -4,7 +4,7 @@ import { BaseModal } from './common/BaseModal';
 import { HighscoreEntry, UserTaskStat } from '../types';
 import { getUserTaskStats } from '../services/api';
 import { Colors } from '../theme/colors';
-import i18n, { t, getTaskName } from '../i18n';
+import { useLanguage } from '../i18n';
 
 interface UserStatsModalProps {
   visible: boolean;
@@ -19,6 +19,7 @@ export const UserStatsModal: React.FC<UserStatsModalProps> = ({
   user,
   onClose,
 }) => {
+  const { i18n, t, getTaskName } = useLanguage();
   const [stats, setStats] = useState<UserTaskStat[]>([]);
   const [loading, setLoading] = useState(false);
 
