@@ -1,68 +1,42 @@
 # Built application files
 *.apk
 *.aar
-*.ap_
 *.aab
 
-# Files for the ART/DALVIK VM
-*.dex
+# Node & Expo
+node_modules/
+.expo/
+dist/
+web-build/
 
-# Java class files
-*.class
-
-# Generated build files
-build/
-app/build/
-bin/
-gen/
-out/
-
-# Gradle directory & wrapper binaries
-.gradle/
-gradle/wrapper/gradle-wrapper.jar
-
-# Local configuration file (contains SDK path)
+# Local configuration & IDEs
 local.properties
-
-# Android Studio / IntelliJ IDEA files
 .idea/
+.vscode/
 *.iml
-.navigation/
-captures/
-.externalNativeBuild/
-.cxx/
-cmake/
-
-# Log files
-*.log
-
-# Keystore files
-*.jks
-*.keystore
-
-# OS generated files
 .DS_Store
 Thumbs.db
+
+# Log & Keystore files
+*.log
+*.jks
+*.keystore
 
 # Python
 *.pyc
 **/__pycache__/
-
-# Scripts
-deploy.sh
-
-# Docs
+server/deploy.sh
 server/README.md
 
-# Agents
-.agents
-
-# Environment variables & secrets
+# Secrets & Environment
 .env
 *.env
 users.yml
 
-# Database
+# Database & local data
 *.db
 *.db.bak
 *.csv
+
+# Agents
+.agents
