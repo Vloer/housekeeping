@@ -9,13 +9,13 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.app.housekeeping",
+      "bundleIdentifier": "com.vloer.housekeeping",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.app.housekeeping",
+      "package": "com.vloer.housekeeping",
       "versionCode": 1,
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
