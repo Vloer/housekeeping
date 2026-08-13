@@ -16,6 +16,7 @@
     },
     "android": {
       "package": "com.app.housekeeping",
+      "versionCode": 1,
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
