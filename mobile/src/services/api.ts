@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
 import { CatalogTask, ActiveTask, Household, HighscoreEntry, UserTaskStat } from '../types';
+import { storageService } from './storage';
 
 // Determine Base URL and normalize so /api/ endpoints join cleanly
 const getBaseUrl = (): string => {
@@ -33,6 +34,23 @@ export const apiClient = axios.create({
     'Authorization': `Bearer ${API_TOKEN}`,
   },
   timeout: 10000,
+});
+
+// Request Interceptor: Attach User & Household identity headers for server logging
+apiClient.interceptors.request.use(async (config) => {
+  try {
+    const userName = await storageService.getUserName();
+    const household = await storageService.getHousehold();
+    if (userName) {
+      config.headers['X-User-Name'] = encodeURIComponent(userName);
+    }
+    if (household?.name) {
+      config.headers['X-Household-Name'] = encodeURIComponent(household.name);
+    }
+  } catch {
+    // Ignore storage read failures
+  }
+  return config;
 });
 
 export const getApiErrorMessage = (error: any): string => {
@@ -162,10 +180,20 @@ export const deleteTask = async (householdId: number, catalogTaskId: number): Pr
 };
 
 // Active Task Operations
-export const markTaskDone = async (activeTaskId: number, userUuid: string): Promise<{ last_done_date: string; points_awarded: number }> => {
-  const res = await apiClient.post(`/api/active-tasks/${activeTaskId}/mark-done`, {
-    user_uuid: userUuid,
-  });
+export const markTaskDone = async (
+  activeTaskId: number,
+  userUuid?: string,
+  userUuids?: string[]
+): Promise<{ last_done_date: string; points_awarded: number }> => {
+  const payload: any = {};
+  if (userUuids && userUuids.length > 0) {
+    payload.user_uuids = userUuids;
+    payload.user_uuid = userUuids[0];
+  } else if (userUuid) {
+    payload.user_uuid = userUuid;
+    payload.user_uuids = [userUuid];
+  }
+  const res = await apiClient.post(`/api/active-tasks/${activeTaskId}/mark-done`, payload);
   return res.data;
 };
 

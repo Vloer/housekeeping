@@ -3,6 +3,7 @@ import logging
 import sqlite3
 import json
 from datetime import datetime, timezone, timedelta
+from urllib.parse import unquote
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi import Request
 from core.config import DB_PATH
@@ -50,19 +51,20 @@ class HTTPLoggingMiddleware(BaseHTTPMiddleware):
         # Extract user, household, and task key context
         username, household_name, task_key = self._extract_context(request, body_json)
 
-        context_parts = [
-            f"User: {username if username else 'N/A'}",
-            f"Household: {household_name if household_name else 'N/A'}"
-        ]
+        context_parts = []
+        if username:
+            context_parts.append(f"[User: {username}]")
+        if household_name:
+            context_parts.append(f"[Household: {household_name}]")
         if task_key:
-            context_parts.append(f"Task: {task_key}")
+            context_parts.append(f"[Task: {task_key}]")
 
-        context_str = " ".join([f"[{part}]" for part in context_parts])
+        context_str = (" " + " ".join(context_parts)) if context_parts else ""
 
         timestamp = datetime.now(GMT_PLUS_1).strftime("%Y-%m-%d %H:%M:%S")
         log_message = (
             f"{timestamp} [INFO] HTTP {request.method} {url_path} -> "
-            f"{response.status_code} (in {process_time_ms:.1f}ms) [IP: {client_ip}] {context_str}"
+            f"{response.status_code} (in {process_time_ms:.1f}ms) [IP: {client_ip}]{context_str}"
         )
         logger.info(log_message)
 
@@ -70,9 +72,13 @@ class HTTPLoggingMiddleware(BaseHTTPMiddleware):
 
     def _extract_context(self, request: Request, body_json: dict):
         headers = request.headers
-        username = headers.get("x-user-name") or headers.get("x-username")
+        raw_user = headers.get("x-user-name") or headers.get("x-username")
+        username = unquote(raw_user).strip() if raw_user else None
+
         user_uuid = headers.get("x-user-uuid") or body_json.get("user_uuid")
-        household_name = headers.get("x-household-name")
+
+        raw_hh = headers.get("x-household-name")
+        household_name = unquote(raw_hh).strip() if raw_hh else None
         household_id_str = headers.get("x-household-id")
 
         url_path = request.url.path

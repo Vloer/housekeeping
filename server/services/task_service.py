@@ -1,3 +1,4 @@
+import math
 from datetime import datetime, timedelta
 from fastapi import HTTPException, status
 from repositories.task_repository import TaskRepository
@@ -91,14 +92,22 @@ class TaskService:
         self.repo.mark_task_done(active_task_id, today_str)
         
         points_awarded = 0
-        if task_row and req and req.user_uuid:
-            points_awarded = task_row["frequency_days"]
-            self.repo.award_points(
-                task_row["household_id"],
-                req.user_uuid.strip(),
-                task_row["catalog_task_id"],
-                points_awarded
-            )
+        if task_row and req:
+            uuids = []
+            if req.user_uuids:
+                uuids = [u.strip() for u in req.user_uuids if u and u.strip()]
+            elif req.user_uuid and req.user_uuid.strip():
+                uuids = [req.user_uuid.strip()]
+
+            if uuids:
+                points_awarded = math.ceil(task_row["frequency_days"] / len(uuids))
+                for u_uuid in uuids:
+                    self.repo.award_points(
+                        task_row["household_id"],
+                        u_uuid,
+                        task_row["catalog_task_id"],
+                        points_awarded
+                    )
             
         self.repo.commit()
         return MarkDoneResponse(

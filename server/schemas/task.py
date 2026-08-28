@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 class MarkDoneRequest(BaseModel):
     user_uuid: str | None = None
+    user_uuids: list[str] | None = None
 
 class MarkDoneResponse(BaseModel):
     status: str

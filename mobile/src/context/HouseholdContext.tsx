@@ -24,7 +24,7 @@ interface HouseholdContextType {
   removeRecentHousehold: (householdId: number) => Promise<void>;
   leaveHousehold: () => Promise<void>;
   refreshData: () => Promise<void>;
-  markTaskDoneOptimistic: (activeTaskId: number) => Promise<{ points: number }>;
+  markTaskDoneOptimistic: (activeTaskId: number, userUuids?: string[]) => Promise<{ points: number }>;
   activateTaskOptimistic: (catalogTaskId: number, frequencyDays: number) => Promise<void>;
   deactivateTaskOptimistic: (catalogTaskId: number) => Promise<void>;
   addCustomTaskOptimistic: (name: string, frequencyDays: number) => Promise<void>;
@@ -214,12 +214,15 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   // Optimistic UI updates
-  const markTaskDoneOptimistic = async (activeTaskId: number): Promise<{ points: number }> => {
+  const markTaskDoneOptimistic = async (activeTaskId: number, userUuids?: string[]): Promise<{ points: number }> => {
     const todayStr = getTodayStr();
     const previousTasks = [...activeTasks];
+    const previousHighscores = [...highscores];
     
     const task = activeTasks.find((t) => t.id === activeTaskId);
-    const pointsAwarded = task ? task.frequency_days : 0;
+    const targetUuids = (userUuids && userUuids.length > 0) ? userUuids : (userUuid ? [userUuid] : []);
+    const participantCount = Math.max(1, targetUuids.length);
+    const pointsAwardedPerPerson = task ? Math.ceil(task.frequency_days / participantCount) : 0;
 
     setActiveTasks((prev) =>
       prev.map((t) =>
@@ -231,18 +234,19 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     setHighscores((prev) =>
       prev.map((h) =>
-        h.user_uuid === userUuid
-          ? { ...h, points: h.points + pointsAwarded }
+        targetUuids.includes(h.user_uuid)
+          ? { ...h, points: h.points + pointsAwardedPerPerson }
           : h
       )
     );
 
     try {
-      const res = await api.markTaskDone(activeTaskId, userUuid);
+      const res = await api.markTaskDone(activeTaskId, userUuid, targetUuids);
       refreshData();
       return { points: res.points_awarded };
     } catch (err) {
       setActiveTasks(previousTasks);
+      setHighscores(previousHighscores);
       console.error('Failed to mark task done:', err);
       throw err;
     }

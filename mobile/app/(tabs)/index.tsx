@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useHousehold } from '../../src/context/HouseholdContext';
 import { TaskCard } from '../../src/components/TaskCard';
+import { CoCompleteModal } from '../../src/components/CoCompleteModal';
 import { ActiveTask } from '../../src/types';
 import { Colors } from '../../src/theme/colors';
 import { getTodayStr, getIn7DaysStr, getThisWeekBounds } from '../../src/utils/dateUtils';
@@ -15,12 +16,16 @@ export default function ActiveTasksScreen() {
   const {
     household,
     activeTasks,
+    highscores,
+    userUuid,
+    userName,
     loading,
     refreshData,
     markTaskDoneOptimistic,
   } = useHousehold();
 
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [coCompleteTask, setCoCompleteTask] = useState<ActiveTask | null>(null);
 
   useEffect(() => {
     if (!loading && !household) {
@@ -124,14 +129,54 @@ export default function ActiveTasksScreen() {
       });
   }, [activeTasks, todayStr, weekRange, in7DaysStr]);
 
+  const handleCoCompletePress = useCallback(
+    (task: ActiveTask) => {
+      if (highscores.length <= 1) {
+        Alert.alert(
+          'Co-Complete Task',
+          'You are currently the only member in this household. Invite other members using your Join Code to complete tasks together!'
+        );
+        return;
+      }
+      setCoCompleteTask(task);
+    },
+    [highscores.length]
+  );
+
+  const handleConfirmCoComplete = useCallback(
+    async (selectedUuids: string[]) => {
+      if (!coCompleteTask) return;
+      const task = coCompleteTask;
+      setCoCompleteTask(null);
+      try {
+        const taskName = getTaskName(task.task_name);
+        const result = await markTaskDoneOptimistic(task.id, selectedUuids);
+
+        const messages = (i18n.activeTasksScreen as any).casualTaskDoneMessages as string[] | undefined;
+        const randomTemplate = messages && messages.length > 0
+          ? messages[Math.floor(Math.random() * messages.length)]
+          : i18n.activeTasksScreen.taskDoneMessage;
+
+        Alert.alert(
+          i18n.activeTasksScreen.taskDoneTitle,
+          t(randomTemplate, { task: taskName, points: result.points })
+        );
+      } catch (err) {
+        Alert.alert(i18n.onboarding.errorTitle, i18n.activeTasksScreen.failedToComplete);
+      }
+    },
+    [coCompleteTask, getTaskName, i18n, markTaskDoneOptimistic, t]
+  );
+
   const renderTaskItem = useCallback(
     ({ item }: { item: ActiveTask }) => (
       <TaskCard
         task={item}
         onComplete={handleCompleteTask}
+        onCoComplete={handleCoCompletePress}
       />
     ),
-    [handleCompleteTask]
+    [handleCompleteTask, handleCoCompletePress]
   );
 
   const keyExtractor = useCallback((item: ActiveTask) => item.id.toString(), []);
@@ -224,6 +269,16 @@ export default function ActiveTasksScreen() {
             </Text>
           </View>
         }
+      />
+
+      <CoCompleteModal
+        visible={coCompleteTask !== null}
+        task={coCompleteTask}
+        householdMembers={highscores}
+        currentUserUuid={userUuid}
+        currentUserName={userName}
+        onClose={() => setCoCompleteTask(null)}
+        onConfirm={handleConfirmCoComplete}
       />
     </View>
   );

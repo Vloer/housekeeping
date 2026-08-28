@@ -9,10 +9,11 @@ import { useLanguage } from '../i18n';
 interface TaskCardProps {
   task: ActiveTask;
   onComplete: (taskId: number) => void;
+  onCoComplete?: (task: ActiveTask) => void;
   onLongPress?: (task: ActiveTask) => void;
 }
 
-const TaskCardComponent: React.FC<TaskCardProps> = ({ task, onComplete, onLongPress }) => {
+const TaskCardComponent: React.FC<TaskCardProps> = ({ task, onComplete, onCoComplete, onLongPress }) => {
   const { i18n, t, getTaskName } = useLanguage();
   const isOverdue = task.days_overdue > 0;
   const todayStr = getTodayStr();
@@ -66,15 +67,29 @@ const TaskCardComponent: React.FC<TaskCardProps> = ({ task, onComplete, onLongPr
       activeOpacity={0.9}
       onLongPress={() => onLongPress?.(task)}
     >
-      <TouchableOpacity
-        style={styles.doneButton}
-        onPress={() => onComplete(task.id)}
-        activeOpacity={0.7}
-        accessibilityLabel={i18n.components.taskCard.markAsCompleted}
-        accessibilityRole="button"
-      >
-        <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-      </TouchableOpacity>
+      <View style={styles.actionButtons}>
+        <TouchableOpacity
+          style={styles.doneButton}
+          onPress={() => onComplete(task.id)}
+          activeOpacity={0.7}
+          accessibilityLabel={i18n.components.taskCard.markAsCompleted}
+          accessibilityRole="button"
+        >
+          <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+
+        {onCoComplete && (
+          <TouchableOpacity
+            style={styles.coCompleteButton}
+            onPress={() => onCoComplete(task)}
+            activeOpacity={0.7}
+            accessibilityLabel="Co-complete task with household members"
+            accessibilityRole="button"
+          >
+            <Ionicons name="people" size={18} color={Colors.primary} />
+          </TouchableOpacity>
+        )}
+      </View>
 
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={1}>{getTaskName(task.task_name)}</Text>
@@ -111,6 +126,12 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+    gap: 8,
+  },
   doneButton: {
     width: 38,
     height: 38,
@@ -118,12 +139,21 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.secondary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 14,
     shadowColor: Colors.secondary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 3,
+  },
+  coCompleteButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: Colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(231, 111, 81, 0.25)',
   },
   content: {
     flex: 1,
