@@ -3,12 +3,12 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'reac
 import { BaseModal } from './common/BaseModal';
 import { Colors } from '../theme/colors';
 import { getFrequencyPresets } from '../types';
-import { useLanguage } from '../i18n';
+import { useLanguage, t } from '../i18n';
 
 interface AddCustomTaskModalProps {
   visible: boolean;
   onClose: () => void;
-  onAdd: (name: string, frequencyDays: number) => Promise<void>;
+  onAdd: (name: string, frequencyDays: number, customPoints?: number | null) => Promise<void>;
 }
 
 export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible, onClose, onAdd }) => {
@@ -17,7 +17,17 @@ export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible,
   const [name, setName] = useState('');
   const [frequencyDays, setFrequencyDays] = useState(30);
   const [customDaysInput, setCustomDaysInput] = useState('');
+  const [customPointsInput, setCustomPointsInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Compute effective allocated days for the task
+  let effectiveDays = frequencyDays;
+  if (customDaysInput) {
+    const parsed = parseInt(customDaysInput, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      effectiveDays = parsed;
+    }
+  }
 
   const handleSave = async () => {
     const trimmedName = name.trim();
@@ -36,11 +46,25 @@ export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible,
       finalFreq = parsed;
     }
 
+    let finalPoints: number | null = null;
+    if (customPointsInput.trim()) {
+      const parsedPoints = parseInt(customPointsInput, 10);
+      if (isNaN(parsedPoints) || parsedPoints <= 0 || parsedPoints > finalFreq) {
+        const errorMsgTemplate =
+          (i18n.modals.addCustomTask as any).pleaseEnterValidPoints ||
+          'Points cannot exceed allocated repeat frequency in days ({max})';
+        Alert.alert(i18n.onboarding.validationError, t(errorMsgTemplate, { max: finalFreq }));
+        return;
+      }
+      finalPoints = parsedPoints;
+    }
+
     try {
       setLoading(true);
-      await onAdd(trimmedName, finalFreq);
+      await onAdd(trimmedName, finalFreq, finalPoints);
       setName('');
       setCustomDaysInput('');
+      setCustomPointsInput('');
       setFrequencyDays(30);
       onClose();
     } catch (err) {
@@ -49,6 +73,21 @@ export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible,
       setLoading(false);
     }
   };
+
+  const pointsLabelText = t(
+    (i18n.modals.addCustomTask as any).pointsLabel || 'Points (Optional):',
+    { max: effectiveDays }
+  );
+
+  const pointsSublabelText = t(
+    (i18n.modals.addCustomTask as any).pointsSublabel || 'Leave empty for default ({max} pts). Max: {max} pts.',
+    { max: effectiveDays }
+  );
+
+  const pointsPlaceholderText = t(
+    (i18n.modals.addCustomTask as any).pointsPlaceholder || 'Points (default: {max})',
+    { max: effectiveDays }
+  );
 
   return (
     <BaseModal visible={visible} title={i18n.modals.addCustomTask.title} onClose={onClose}>
@@ -89,6 +128,16 @@ export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible,
         keyboardType="numeric"
         value={customDaysInput}
         onChangeText={setCustomDaysInput}
+      />
+
+      <Text style={styles.label}>{pointsLabelText}</Text>
+      <Text style={styles.sublabel}>{pointsSublabelText}</Text>
+      <TextInput
+        style={styles.input}
+        placeholder={pointsPlaceholderText}
+        keyboardType="numeric"
+        value={customPointsInput}
+        onChangeText={setCustomPointsInput}
       />
 
       <TouchableOpacity

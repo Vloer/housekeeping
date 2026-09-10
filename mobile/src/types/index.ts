@@ -17,6 +17,7 @@ export interface CatalogTask {
   frequency_days: number;
   last_done_date: string | null;
   due_date: string | null;
+  custom_points?: number | null;
 }
 
 export interface ActiveTask {
@@ -27,6 +28,7 @@ export interface ActiveTask {
   last_done_date: string | null;
   due_date: string | null;
   days_overdue: number;
+  custom_points?: number | null;
 }
 
 export interface HighscoreEntry {

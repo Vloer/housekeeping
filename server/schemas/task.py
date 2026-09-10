@@ -30,6 +30,7 @@ class UpdateDueDateResponse(BaseModel):
 class CustomTaskRequest(BaseModel):
     name: str
     default_frequency_days: int
+    custom_points: int | None = None
 
 class CustomTaskResponse(BaseModel):
     status: str
@@ -56,6 +57,7 @@ class CatalogTaskResponse(BaseModel):
     frequency_days: int
     last_done_date: str | None = None
     due_date: str | None = None
+    custom_points: int | None = None
 
 class ActiveTaskResponse(BaseModel):
     id: int
@@ -65,3 +67,4 @@ class ActiveTaskResponse(BaseModel):
     last_done_date: str | None = None
     due_date: str | None = None
     days_overdue: int
+    custom_points: int | None = None

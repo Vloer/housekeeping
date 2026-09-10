@@ -5,7 +5,10 @@ import i18n, { t, getTaskName } from '../i18n';
 import { getThisWeekBounds } from '../utils/dateUtils';
 
 // Check if running inside standard Expo Go app
-const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+const isExpoGo =
+  Constants.appOwnership === 'expo' ||
+  Constants.executionEnvironment === ExecutionEnvironment.StoreClient ||
+  (Constants.executionEnvironment as any) === 'storeClient';
 
 if (!isExpoGo) {
   try {

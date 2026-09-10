@@ -152,10 +152,14 @@
       "repeatFrequencyLabel": "Herhaalfrequentie",
       "customDaysLabel": "Of voer een aangepast aantal dagen in:",
       "customDaysPlaceholder": "Aantal dagen (bijv. 45)",
+      "pointsLabel": "Punten (Optioneel):",
+      "pointsSublabel": "Laat leeg voor standaard ({max} ptn). Maximaal: {max} ptn.",
+      "pointsPlaceholder": "Punten (standaard: {max})",
       "createButton": "Taak Aanmaken",
       "creatingButton": "Aanmaken..",
       "pleaseEnterTaskName": "Voer een taaknaam in",
       "pleaseEnterValidDays": "Voer een geldig aantal dagen in",
+      "pleaseEnterValidPoints": "Punten mogen niet hoger zijn dan het aantal herhaaldagen ({max})",
       "failedToCreateTask": "Taak aanmaken mislukt. Probeer het opnieuw"
     },
     "editTask": {

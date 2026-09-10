@@ -40,7 +40,8 @@ class TaskService:
                 active_id=r["active_id"],
                 frequency_days=freq_days,
                 last_done_date=last_done,
-                due_date=due_date
+                due_date=due_date,
+                custom_points=r["custom_points"]
             ))
         return result
 
@@ -61,7 +62,8 @@ class TaskService:
                 frequency_days=r["frequency_days"],
                 last_done_date=last_done,
                 due_date=due_date,
-                days_overdue=days_overdue
+                days_overdue=days_overdue,
+                custom_points=r["custom_points"]
             ))
         return result
 
@@ -81,7 +83,8 @@ class TaskService:
                 frequency_days=r["frequency_days"],
                 last_done_date=last_done,
                 due_date=due_date,
-                days_overdue=days_overdue
+                days_overdue=days_overdue,
+                custom_points=r["custom_points"]
             ))
         return result
 
@@ -100,7 +103,8 @@ class TaskService:
                 uuids = [req.user_uuid.strip()]
 
             if uuids:
-                points_awarded = math.ceil(task_row["frequency_days"] / len(uuids))
+                base_points = task_row["custom_points"] if task_row["custom_points"] is not None else task_row["frequency_days"]
+                points_awarded = math.ceil(base_points / len(uuids))
                 for u_uuid in uuids:
                     self.repo.award_points(
                         task_row["household_id"],
@@ -140,7 +144,15 @@ class TaskService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date format. Use YYYY-MM-DD.")
 
     def create_custom(self, household_id: int, req: CustomTaskRequest) -> CustomTaskResponse:
-        catalog_task_id = self.repo.create_custom(household_id, req.name, req.default_frequency_days)
+        if req.custom_points is not None:
+            if req.custom_points <= 0 or req.custom_points > req.default_frequency_days:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Points must be between 1 and {req.default_frequency_days}"
+                )
+        catalog_task_id = self.repo.create_custom(
+            household_id, req.name, req.default_frequency_days, req.custom_points
+        )
         self.repo.commit()
         return CustomTaskResponse(status="success", catalog_task_id=catalog_task_id)
 

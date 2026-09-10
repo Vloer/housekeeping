@@ -102,7 +102,9 @@ const TaskCardComponent: React.FC<TaskCardProps> = ({ task, onComplete, onCoComp
 
       <View style={styles.pointsBadge}>
         <Ionicons name="star" size={12} color={Colors.accent} style={{ marginRight: 3 }} />
-        <Text style={styles.pointsNumber}>+{task.frequency_days}</Text>
+        <Text style={styles.pointsNumber}>
+          +{(task.custom_points !== null && task.custom_points !== undefined) ? task.custom_points : task.frequency_days}
+        </Text>
       </View>
     </TouchableOpacity>
   );

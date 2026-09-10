@@ -49,7 +49,7 @@ export const CoCompleteModal: React.FC<CoCompleteModalProps> = ({
   if (!task) return null;
 
   const taskName = getTaskName(task.task_name);
-  const totalPoints = task.frequency_days;
+  const totalPoints = (task.custom_points !== null && task.custom_points !== undefined) ? task.custom_points : task.frequency_days;
 
   // Build unified member list ensuring current user is present
   const memberList: HighscoreEntry[] = [...householdMembers];

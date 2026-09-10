@@ -27,6 +27,7 @@ def init_db():
         name TEXT NOT NULL,
         is_custom INTEGER NOT NULL DEFAULT 0,
         default_frequency_days INTEGER NOT NULL DEFAULT 30,
+        custom_points INTEGER DEFAULT NULL,
         FOREIGN KEY(household_id) REFERENCES households(id)
     )
     """)
@@ -38,6 +39,7 @@ def init_db():
         frequency_days INTEGER NOT NULL,
         last_done_date TEXT,
         notified_this_cycle INTEGER NOT NULL DEFAULT 0,
+        custom_points INTEGER DEFAULT NULL,
         FOREIGN KEY(household_id) REFERENCES households(id),
         FOREIGN KEY(catalog_task_id) REFERENCES task_catalog(id)
     )
@@ -67,5 +69,13 @@ def init_db():
         FOREIGN KEY(catalog_task_id) REFERENCES task_catalog(id)
     )
     """)
+    try:
+        cursor.execute("ALTER TABLE task_catalog ADD COLUMN custom_points INTEGER DEFAULT NULL")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE active_tasks ADD COLUMN custom_points INTEGER DEFAULT NULL")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()

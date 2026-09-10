@@ -11,7 +11,8 @@ class TaskRepository:
         query = """
         SELECT c.id, c.name, c.is_custom, c.default_frequency_days,
                a.id AS active_id, a.frequency_days, a.last_done_date,
-               date(a.last_done_date, '+' || a.frequency_days || ' days') AS due_date
+               date(a.last_done_date, '+' || a.frequency_days || ' days') AS due_date,
+               COALESCE(a.custom_points, c.custom_points) AS custom_points
         FROM task_catalog c
         LEFT JOIN active_tasks a ON c.id = a.catalog_task_id AND a.household_id = c.household_id
         WHERE c.household_id = ?
@@ -25,7 +26,8 @@ class TaskRepository:
         query = """
         SELECT a.id, a.catalog_task_id, c.name, a.frequency_days, a.last_done_date,
                date(a.last_done_date, '+' || a.frequency_days || ' days') AS due_date,
-               CAST(julianday('now', 'localtime') - julianday(date(a.last_done_date, '+' || a.frequency_days || ' days')) AS INTEGER) AS days_overdue
+               CAST(julianday('now', 'localtime') - julianday(date(a.last_done_date, '+' || a.frequency_days || ' days')) AS INTEGER) AS days_overdue,
+               COALESCE(a.custom_points, c.custom_points) AS custom_points
         FROM active_tasks a
         JOIN task_catalog c ON a.catalog_task_id = c.id
         WHERE a.household_id = ?
@@ -44,7 +46,8 @@ class TaskRepository:
         query = """
         SELECT a.id, a.catalog_task_id, c.name, a.frequency_days, a.last_done_date,
                date(a.last_done_date, '+' || a.frequency_days || ' days') AS due_date,
-               CAST(julianday('now', 'localtime') - julianday(date(a.last_done_date, '+' || a.frequency_days || ' days')) AS INTEGER) AS days_overdue
+               CAST(julianday('now', 'localtime') - julianday(date(a.last_done_date, '+' || a.frequency_days || ' days')) AS INTEGER) AS days_overdue,
+               COALESCE(a.custom_points, c.custom_points) AS custom_points
         FROM active_tasks a
         JOIN task_catalog c ON a.catalog_task_id = c.id
         WHERE a.household_id = ?
@@ -55,7 +58,13 @@ class TaskRepository:
     def get_active_task_by_id(self, active_task_id: int) -> Optional[sqlite3.Row]:
         cursor = self.db.cursor()
         cursor.execute(
-            "SELECT id, household_id, catalog_task_id, frequency_days FROM active_tasks WHERE id = ?",
+            """
+            SELECT a.id, a.household_id, a.catalog_task_id, a.frequency_days,
+                   COALESCE(a.custom_points, c.custom_points) AS custom_points
+            FROM active_tasks a
+            JOIN task_catalog c ON a.catalog_task_id = c.id
+            WHERE a.id = ?
+            """,
             (active_task_id,)
         )
         return cursor.fetchone()
@@ -111,16 +120,16 @@ class TaskRepository:
             (last_done_date, active_task_id)
         )
 
-    def create_custom(self, household_id: int, name: str, default_frequency_days: int) -> int:
+    def create_custom(self, household_id: int, name: str, default_frequency_days: int, custom_points: Optional[int] = None) -> int:
         cursor = self.db.cursor()
         cursor.execute(
-            "INSERT INTO task_catalog (household_id, name, is_custom, default_frequency_days) VALUES (?, ?, 1, ?)",
-            (household_id, name, default_frequency_days)
+            "INSERT INTO task_catalog (household_id, name, is_custom, default_frequency_days, custom_points) VALUES (?, ?, 1, ?, ?)",
+            (household_id, name, default_frequency_days, custom_points)
         )
         catalog_task_id = cursor.lastrowid
         cursor.execute(
-            "INSERT INTO active_tasks (household_id, catalog_task_id, frequency_days, notified_this_cycle) VALUES (?, ?, ?, 0)",
-            (household_id, catalog_task_id, default_frequency_days)
+            "INSERT INTO active_tasks (household_id, catalog_task_id, frequency_days, custom_points, notified_this_cycle) VALUES (?, ?, ?, ?, 0)",
+            (household_id, catalog_task_id, default_frequency_days, custom_points)
         )
         return catalog_task_id
 

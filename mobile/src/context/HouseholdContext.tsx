@@ -27,7 +27,7 @@ interface HouseholdContextType {
   markTaskDoneOptimistic: (activeTaskId: number, userUuids?: string[]) => Promise<{ points: number }>;
   activateTaskOptimistic: (catalogTaskId: number, frequencyDays: number) => Promise<void>;
   deactivateTaskOptimistic: (catalogTaskId: number) => Promise<void>;
-  addCustomTaskOptimistic: (name: string, frequencyDays: number) => Promise<void>;
+  addCustomTaskOptimistic: (name: string, frequencyDays: number, customPoints?: number | null) => Promise<void>;
   deleteTaskOptimistic: (catalogTaskId: number) => Promise<void>;
   updateTaskLastDoneOptimistic: (activeTaskId: number, lastDoneDate: string) => Promise<void>;
   updateTaskDetailsOptimistic: (catalogTaskId: number, name: string, frequencyDays: number) => Promise<void>;
@@ -222,7 +222,8 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const task = activeTasks.find((t) => t.id === activeTaskId);
     const targetUuids = (userUuids && userUuids.length > 0) ? userUuids : (userUuid ? [userUuid] : []);
     const participantCount = Math.max(1, targetUuids.length);
-    const pointsAwardedPerPerson = task ? Math.ceil(task.frequency_days / participantCount) : 0;
+    const basePoints = (task && task.custom_points !== null && task.custom_points !== undefined) ? task.custom_points : (task ? task.frequency_days : 0);
+    const pointsAwardedPerPerson = Math.ceil(basePoints / participantCount);
 
     setActiveTasks((prev) =>
       prev.map((t) =>
@@ -280,10 +281,10 @@ export const HouseholdProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const addCustomTaskOptimistic = async (name: string, frequencyDays: number) => {
+  const addCustomTaskOptimistic = async (name: string, frequencyDays: number, customPoints?: number | null) => {
     if (!household) return;
     try {
-      await api.addCustomTask(household.household_id, name, frequencyDays);
+      await api.addCustomTask(household.household_id, name, frequencyDays, customPoints);
       refreshData();
     } catch (err) {
       console.error('Failed to add custom task:', err);

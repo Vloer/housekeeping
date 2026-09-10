@@ -152,10 +152,14 @@
       "repeatFrequencyLabel": "Repeat Frequency",
       "customDaysLabel": "Or enter custom number of days:",
       "customDaysPlaceholder": "Custom days (e.g. 45)",
+      "pointsLabel": "Points (Optional):",
+      "pointsSublabel": "Leave empty for default ({max} pts). Max: {max} pts.",
+      "pointsPlaceholder": "Points (default: {max})",
       "createButton": "Create Task",
       "creatingButton": "Creating..",
       "pleaseEnterTaskName": "Please enter a task name",
       "pleaseEnterValidDays": "Please enter a valid number of days",
+      "pleaseEnterValidPoints": "Points cannot exceed allocated repeat frequency in days ({max})",
       "failedToCreateTask": "Failed to create task. Please try again"
     },
     "editTask": {

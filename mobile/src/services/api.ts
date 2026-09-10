@@ -157,10 +157,16 @@ export const deactivateTask = async (householdId: number, catalogTaskId: number)
   });
 };
 
-export const addCustomTask = async (householdId: number, name: string, defaultFrequencyDays: number): Promise<number> => {
+export const addCustomTask = async (
+  householdId: number,
+  name: string,
+  defaultFrequencyDays: number,
+  customPoints?: number | null
+): Promise<number> => {
   const res = await apiClient.post(`/api/households/${householdId}/custom-task`, {
     name,
     default_frequency_days: defaultFrequencyDays,
+    custom_points: customPoints,
   });
   return res.data.catalog_task_id;
 };
