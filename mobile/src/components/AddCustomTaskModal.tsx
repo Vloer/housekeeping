@@ -49,7 +49,7 @@ export const AddCustomTaskModal: React.FC<AddCustomTaskModalProps> = ({ visible,
     let finalPoints: number | null = null;
     if (customPointsInput.trim()) {
       const parsedPoints = parseInt(customPointsInput, 10);
-      if (isNaN(parsedPoints) || parsedPoints <= 0 || parsedPoints > finalFreq) {
+      if (isNaN(parsedPoints) || parsedPoints < 0 || parsedPoints > finalFreq) {
         const errorMsgTemplate =
           (i18n.modals.addCustomTask as any).pleaseEnterValidPoints ||
           'Points cannot exceed allocated repeat frequency in days ({max})';

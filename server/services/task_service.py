@@ -145,10 +145,10 @@ class TaskService:
 
     def create_custom(self, household_id: int, req: CustomTaskRequest) -> CustomTaskResponse:
         if req.custom_points is not None:
-            if req.custom_points <= 0 or req.custom_points > req.default_frequency_days:
+            if req.custom_points < 0 or req.custom_points > req.default_frequency_days:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Points must be between 1 and {req.default_frequency_days}"
+                    detail=f"Points must be between 0 and {req.default_frequency_days}"
                 )
         catalog_task_id = self.repo.create_custom(
             household_id, req.name, req.default_frequency_days, req.custom_points
